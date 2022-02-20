@@ -1,15 +1,19 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
+  <div class="page">
+    <LandingCard msg="Nope... Working on this now; should be ready next release" />
+    <CustomFooter year="2022" />
+  </div>
 </template>
 
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
-import HelloWorld from './components/HelloWorld.vue';
+import LandingCard from './components/LandingCard.vue';
+import CustomFooter from './components/CustomFooter.vue';
 
 @Options({
   components: {
-    HelloWorld,
+    LandingCard,
+    CustomFooter
   },
 })
 export default class App extends Vue {}
@@ -20,8 +24,22 @@ export default class App extends Vue {}
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+}
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.page {
+  width: 100%;
+  height: 100vh;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  background-color: #F8F9FA;
+  flex-direction: column;
 }
 </style>
