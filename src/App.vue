@@ -1,20 +1,20 @@
 <template>
   <div class="page">
-    <LandingCard msg="Nope... Working on this now; should be ready next release" />
-    <CustomFooter year="2022" />
+    <main-widget-component />
+    <footer-component year="2022" />
   </div>
 </template>
 
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
-import LandingCard from './components/LandingCard.vue';
-import CustomFooter from './components/CustomFooter.vue';
+import MainWidgetComponent from './components/MainWidgetComponent.vue';
+import FooterComponent from './components/FooterComponent.vue';
 
 @Options({
   components: {
-    LandingCard,
-    CustomFooter
-  },
+    MainWidgetComponent,
+    FooterComponent
+  }
 })
 export default class App extends Vue {}
 </script>
