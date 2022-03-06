@@ -4,11 +4,8 @@
     :style="{ 'grid-template-columns': columnLengthOperand, 'margin-left': dynamicCrunch }"
     class="addition-problem">
     <span class="top-bumper" :style="{ 'grid-template-columns': answerLength }">
-      <li
-        v-for="num in carryArr"
-        :key="num"
-        :style="{ 'visibility': isAutoCarry() }">
-      {{ num }}
+      <li v-for="num in topBumper" :key="num" :ref="'carry' + num.id">
+        {{ num }}
       </li>
     </span>
     <span class="left-operand"><li v-for="num in strArrayLeft" :key="num">{{ num }}</li></span>
@@ -27,18 +24,9 @@
           :class="{ 'visible': isSequence(index), 'clickable': isSequence(index) }"
           @keypress="isNumber($event, index)"
           :autofocus="sequence === index"
-          :disabled="isDisabled(index, uInput)"
+          :disabled="isDisabled(index)"
           @blur="retainValue(index)" />
       </li>
-     <!-- <input
-        v-for="(num, index) in answer" :key="index"
-        @paste="prevent"
-        :ref="'element' + num.id"
-        v-model="userInput[index]"
-        :disabled="index > sequence || num === '.'"
-        :autofocus="sequence === index"
-        :style="{ 'visibility': isSequence(index) }"
-        @keypress="isNumber($event)" /> -->
     </div>
   </div>
 </template>
@@ -53,16 +41,20 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
 @Options({
   data() {
     return {
-      numInitialLeft: generateRandomNumber(),
-      numInitialRight: generateRandomNumber(),
+      //numInitialLeft: generateRandomNumber(),
+      //numInitialRight: generateRandomNumber(),
+      numInitialLeft: 999.9,
+      numInitialRight: 888.8,
       strGroomedLeft: '',
       strGroomedRight: '',
-      numColumnsOperand: 0,
+      numColumnsInOperand: 0,
       numDecimalFractions: 0,
       leftArray: [],
       rightArray: [],
-      carryArr: [],
+      topBumper: [],
       userInput: [],
+      currentUserInput: '',
+      currentUserInputIndex: 0,
       answer: [],
       diffAnswerLengthAndOperandLength: 0,
       sequence: 0,
@@ -82,7 +74,7 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       return this.alignColumns('', this.strGroomedRight);
     },
     dynamicCrunch() {
-      switch (this.numColumnsOperand) {
+      switch (this.numColumnsInOperand) {
         case 1:
         case 2:
           return "15vw";
@@ -99,14 +91,14 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       // decimal fractions are the numbers to the right of the decimal point => "123.089"
       if (this.numDecimalFractions > 0) {
         if (this.diffAnswerLengthAndOperandLength !== 0) {
-          return `repeat(${this.diffAnswerLengthAndOperandLength }, 1fr) repeat(${this.numColumnsOperand - this.numDecimalFractions - 1}, 1fr) 2vw repeat(${this.numDecimalFractions}, 1fr)`;
+          return `repeat(${this.diffAnswerLengthAndOperandLength }, 1fr) repeat(${this.numColumnsInOperand - this.numDecimalFractions - 1}, 1fr) 2vw repeat(${this.numDecimalFractions}, 1fr)`;
         }
-        return `repeat(${this.numColumnsOperand - this.numDecimalFractions - 1}, 1fr) 2vw repeat(${this.numDecimalFractions}, 1fr)`;
+        return `repeat(${this.numColumnsInOperand - this.numDecimalFractions - 1}, 1fr) 2vw repeat(${this.numDecimalFractions}, 1fr)`;
       }
       if (this.diffAnswerLengthAndOperandLength  !== 0) {
-        return `repeat(${this.diffAnswerLengthAndOperandLength }, 1fr) repeat(${this.numColumnsOperand}, 1fr)`;
+        return `repeat(${this.diffAnswerLengthAndOperandLength }, 1fr) repeat(${this.numColumnsInOperand}, 1fr)`;
       }
-      return `repeat(${this.numColumnsOperand}, 1fr)`;
+      return `repeat(${this.numColumnsInOperand}, 1fr)`;
     },
     answerLength() {
       if (this.numDecimalFractions > 0) {
@@ -115,59 +107,53 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       return `repeat(${this.answer.length}, 1fr)`;
     },
   },
-  watch: {
-    sequence(value: number) {
-      /*if (this.onEdit && this.userInput[value] == '') {
-        this.userInput[value] = '5';
-      }*/
-      /*if (!this.onEdit || this.sequence != -1) {
-        if (value === -1) {
-          return;
-        }
-        if (value !== this.answer.length - 1) {
-          const el = eval(`this.$refs.element${value.toString()}[0]`);
-          el.classList.add("visible");
-          el.focus();
-          if (value == this.answer.length - 2 || (value == this.answer.length - 3 && this.answer[this.answer.length - 2] == '.')) {
-            const starterEl = eval(`this.$refs.element${(value + 1).toString()}[0]`);
-            starterEl.classList.add("visible");
-          }
-        }
-      }*/
-    }
-  },
   methods: {
+
     setup() {
       this.numDecimalFractions = Math.max(precision(this.numInitialLeft), precision(this.numInitialRight));
       this.strGroomedLeft = this.numInitialLeft.toFixed(this.numDecimalFractions);
       this.strGroomedRight = this.numInitialRight.toFixed(this.numDecimalFractions);
-      this.numColumnsOperand = greatestNumColumn(this.strGroomedLeft, this.strGroomedRight);
+      this.numColumnsInOperand = greatestNumColumn(this.strGroomedLeft, this.strGroomedRight);
       this.computeMathProblem();
       this.initUserInput();
-      this.diffAnswerLengthAndOperandLength = this.answer.length - this.numColumnsOperand;
+      this.diffAnswerLengthAndOperandLength = this.answer.length - this.numColumnsInOperand;
     },
-    isAutoCarry() {
-      console.dir(this.$refs);
-      if (this.userInput[this.sequence - 1] === '.') {
-        if (this.carryArr[this.sequence - 2] === '1') {
-          if (this.userInput[this.sequence] === this.answer[this.sequence]) {
-            /*const el = eval(`this.$refs.carryundefined${this.sequence - 2}[0]`);
-            el.style.visibility = "visible"*/
-            return "visible";
+
+    autoCarry() {
+      if (this.userInput[this.sequence - 1]) {
+        if (this.topBumper[this.sequence - 2]) {
+          if (this.userInput[this.sequence - 1] === '.' && this.topBumper[this.sequence - 2] === '1') {
+            const el = eval(`this.$refs.carryundefined[${this.sequence - 2}]`);
+            if (this.currentUserInput === this.answer[this.currentUserInputIndex]) {
+              el.style.visibility = "visible";
+            } else {
+              el.style.visibility = "hidden";
+            }
           }
+        }
+      }
+      if (this.topBumper[this.sequence - 1]) {
+        if (this.topBumper[this.sequence - 1] === '1') {
+          const el = eval(`this.$refs.carryundefined[${this.sequence - 1}]`);
+          if (this.currentUserInput === this.answer[this.currentUserInputIndex]) {
+            el.style.visibility = "visible";
+          } else {
+            el.style.visibility = "hidden";
+          }
+        }
+      }
+
+      /*if (this.topBumper[this.sequence] === '1') {
+        if (this.currentUserInput === this.answer[this.currentUserInputIndex]) {
+          el.style.visibility = "visible";
+        } else {
+          el.style.visibility = "hidden";
         }
       } else {
-        if (this.carryArr[this.sequence - 1] === '1') {
-          if (this.userInput[this.sequence] === this.answer[this.sequence]) {
-            /*const el = eval(`this.$refs.carryundefinded${this.sequence - 1}[0]`);
-            el.style.visibility = "visible";*/
-            return "visible";
-          }
-        }
-        
-      }
-      return "hidden";
+        el.style.visibility = "hidden";
+      }*/
     },
+
     retainValue(index: number) {
       if (this.sequence === index) {
         const el = eval(`this.$refs.element${this.sequence}[0]`);
@@ -177,6 +163,7 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
         this.moveSequence();
       }
     },
+
     initUserInput() {
       for (let i = 0; i < this.answer.length; i++) {
         if (this.answer[i] !== '.') {
@@ -186,14 +173,15 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
         }
       }
     },
-    isDisabled(index: number, value: string) {
+
+    isDisabled(index: number) {
       if (this.sequence !== index) {
         return true;
       }
       return false;
     },
+
     moveSequence() {
-      // scan left
       let index = this.userInput.length - 1;
       if (this.onEdit) {
         index = this.sequence;
@@ -220,21 +208,23 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
         this.sequence = -1;
       }
     },
+
     moveSequenceOnEdit(index: number) {
       this.onEdit = true;
       if (this.userInput[index] !== '.') {
         this.userInput[index] = '';
         const el = eval(`this.$refs.element${index}[0]`);
-        el.disabled = false;
-        //el.value = '';
-        el.focus();
-        console.dir(el);
+        if (el.value === '') {
+          // handles edge-case: button smash or double click
+          return;
+        }
         this.sequence = index;
         this.moveSequence();
       }
     },
+
     alignColumns(replacementCharacter: string, str: string) {
-      let diff = this.numColumnsOperand - str.length;
+      let diff = this.numColumnsInOperand - str.length;
       if (replacementCharacter === '' && this.diffAnswerLengthAndOperandLength !== 0) {
         diff = this.answer.length - str.length;
       }
@@ -244,51 +234,53 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       }
       return arr.concat([...str]);
     },
+
     computeMathProblem() {
       const left = this.alignColumns('0', this.strGroomedLeft);
       const right = this.alignColumns('0', this.strGroomedRight);
-      const answerArr: string[] = [];
-      for (let i = 0; i < this.numColumnsOperand; i++) {
-        if (left[i] !== '.') {
-          answerArr.push('0');
-        } else {
-          answerArr.push('.');
-        }
+      for (const item of left) {
+        (item !== '.') ? this.topBumper.push('') : this.topBumper.push('.');
+        (item !== '.') ? this.answer.push('0') : this.answer.push('.');
       }
-      for (let i = this.numColumnsOperand - 1; i >= 0; i--) {
-        this.carryArr.push('');
+
+      for (let i = this.numColumnsInOperand - 1; i >= 0; i--) {
+        // use left[i] only because the decimal points are already aligned properly
         if (left[i] !== '.') {
-          const answer = (Number(left[i]) + Number(right[i]) + Number(answerArr[i])).toString();
+          const answer = (Number(left[i]) + Number(right[i]) + Number(this.answer[i])).toString();
+          // carry over logic
           if (answer.length === 2) {
-            const carry: string[] = Array.from(answer);
-            answerArr[i] = carry[1];
-            if ((answerArr[i - 1]) && answerArr[i - 1] === '.') {
-              // we know there is a number before the decimal point
-              answerArr[i - 2] = carry[0];
-              this.carryArr[i - 2] = carry[0];
-            } else if ((answerArr[i - 1])) {
-              answerArr[i - 1] = carry[0];
-              this.carryArr[i - 1] = carry[0];
+            const twoDigitNumber = Array.from(answer);
+            this.answer[i] = twoDigitNumber[1];
+            if (this.answer[i - 1] && this.answer[i - 1] === '.') {
+              // we don't need to null check on this.answer[i - 2], there will always be a number to the left of the decimal
+              this.answer[i - 2] = twoDigitNumber[0];
+              this.topBumper[i - 2] = twoDigitNumber[0];
+            } else if (this.answer[i - 1]) {
+              this.answer[i - 1] = twoDigitNumber[0];
+              this.topBumper[i - 1] = twoDigitNumber[0];
             } else {
-              // we need to add another column
-              answerArr.unshift(carry[0]);
-              this.carryArr.unshift(carry[0]);
+              this.answer.unshift(twoDigitNumber[0]);
+              this.topBumper.unshift(twoDigitNumber[0]);
             }
           } else {
-            answerArr[i] = answer;
+            this.answer[i] = answer;
           }
         }
-      }
-      this.answer = answerArr;
+      } // end for loop
       this.sequence = this.answer.length - 1;
     },
+
     isNumber(event: any, index: number) {
-      event = (event) ? event : window.event;
-      let charCode = (event.which) ? event.which : event.keyCode;
-      console.log(charCode)
-      if (charCode === 13 || (charCode > 31 && (charCode < 48 || charCode > 57)) && charCode !== 46) {
-        event.preventDefault();
-      } else {
+      if ( event.key === '0' ||
+           event.key === '1' ||
+           event.key === '2' ||
+           event.key === '3' ||
+           event.key === '4' ||
+           event.key === '5' ||
+           event.key === '6' ||
+           event.key === '7' ||
+           event.key === '8' ||
+           event.key === '9') {
         if (event.target.value.length === 0) {
           if (this.userInput[index - 1] === '.') {
             // just display decimal
@@ -301,11 +293,16 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
           el.value = event.key;
           this.userInput[index] = el.value;
           this.onEdit = false;
+          this.currentUserInput = this.userInput[index];
+          this.currentUserInputIndex = index;
+          this.autoCarry();
           this.moveSequence();
           return true;
         } else {
           event.preventDefault();
         }
+      } else {
+        event.preventDefault();
       }
     },
     prevent(event: any) {
