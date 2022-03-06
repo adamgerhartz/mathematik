@@ -69,7 +69,6 @@ export default class PracticeComponent extends Vue {
 <style scoped lang="scss">
 /* Main SCSS */
 .practice-container {
-  background-color: rgba(245,245,245,0.5);
   grid-column: 1/8;
   grid-row: 1/5;
   display: grid;
