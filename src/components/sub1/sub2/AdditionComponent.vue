@@ -41,8 +41,10 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
 @Options({
   data() {
     return {
-      numInitialLeft: generateRandomNumber(),
-      numInitialRight: generateRandomNumber(),
+      //numInitialLeft: generateRandomNumber(),
+      //numInitialRight: generateRandomNumber(),
+      numInitialLeft: 999.9,
+      numInitialRight: 888.8,
       strGroomedLeft: '',
       strGroomedRight: '',
       numColumnsInOperand: 0,
