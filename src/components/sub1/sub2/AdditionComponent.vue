@@ -41,10 +41,8 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
 @Options({
   data() {
     return {
-      //numInitialLeft: generateRandomNumber(),
-      //numInitialRight: generateRandomNumber(),
-      numInitialLeft: 999.9,
-      numInitialRight: 888.8,
+      numInitialLeft: generateRandomNumber(),
+      numInitialRight: generateRandomNumber(),
       strGroomedLeft: '',
       strGroomedRight: '',
       numColumnsInOperand: 0,
@@ -142,16 +140,6 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
           }
         }
       }
-
-      /*if (this.topBumper[this.sequence] === '1') {
-        if (this.currentUserInput === this.answer[this.currentUserInputIndex]) {
-          el.style.visibility = "visible";
-        } else {
-          el.style.visibility = "hidden";
-        }
-      } else {
-        el.style.visibility = "hidden";
-      }*/
     },
 
     retainValue(index: number) {

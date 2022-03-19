@@ -1,6 +1,6 @@
 <template>
   <footer>
-    <p>Created by Adam Gerhartz. © {{ year }}</p>
+    <p>Created by Adam Gerhartz © {{ year }}</p>
   </footer>
 </template>
 
