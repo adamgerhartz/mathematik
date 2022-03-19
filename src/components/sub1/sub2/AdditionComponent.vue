@@ -142,16 +142,6 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
           }
         }
       }
-
-      /*if (this.topBumper[this.sequence] === '1') {
-        if (this.currentUserInput === this.answer[this.currentUserInputIndex]) {
-          el.style.visibility = "visible";
-        } else {
-          el.style.visibility = "hidden";
-        }
-      } else {
-        el.style.visibility = "hidden";
-      }*/
     },
 
     retainValue(index: number) {
