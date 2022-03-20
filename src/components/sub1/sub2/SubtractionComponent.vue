@@ -54,6 +54,18 @@ import { precision } from '../../../utils/NumberPrecisionDetector';
 import { greatestNumColumn } from '../../../utils/CompareColumnLength';
 
 @Options({
+  emits: {
+    'user-answer': ((userAnswer: []) => {
+      if (userAnswer[userAnswer.length - 1] !== '') {
+        return userAnswer;
+      }
+    }),
+    'system-answer': ((systemAnswer: []) => {
+      if (systemAnswer) {
+        return systemAnswer;
+      }
+    })
+  },
   data() {
     return {
       numInitialLeft: generateRandomNumber(),
@@ -146,9 +158,6 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
 
     isHover(index: number, isLeftOperand: boolean) {
       // initial state
-      console.log(this.sequenceCopy);
-      console.log(this.sequence);
-      console.log(index);
       if (this.sequenceCopy === -1 && index !== this.left.length - 1) {
         return;
       } else if (this.sequenceCopy === -1 && index === this.left.length - 1) {
@@ -458,6 +467,7 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
           }
         }
       } // end for loop
+      this.$emit('system-answer', this.systemAnswer);
       this.sequence = this.systemAnswer.length - 1;
     },
 
@@ -494,6 +504,7 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
           this.currentUserInput = this.userAnswer[index];
           this.currentUserInputIndex = index;
           this.moveSequence(true);
+          this.$emit('user-answer', this.userAnswer);
           return true;
         } else {
           event.preventDefault();
