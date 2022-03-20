@@ -4,7 +4,7 @@
     <button type="button" @click="goHome">Home</button>
     <button type="button">Refresh</button>
     <button type="button">Hint</button>
-    <button type="button" disabled>Submit</button>
+    <button type="button" :disabled="isAnswer" @click="triggerSubmissionComponent">Submit</button>
   </div>
 </template>
 
@@ -13,14 +13,22 @@
 import { Options, Vue } from 'vue-class-component';
 
 @Options({
-  emits: ['go-home'],
+  emits: ['go-home', 'submit-clicked'],
   methods: {
     goHome() {
       this.$emit('go-home');
+    },
+    triggerSubmissionComponent() {
+      this.$emit('submit-clicked');
     }
-  }
+  },
+  props: {
+    isAnswer: Boolean
+  },
 })
-export default class NavMenuComponent extends Vue {}
+export default class NavMenuComponent extends Vue {
+  isAnswer!: boolean
+}
 </script>
 
 <!-- STYLE -->

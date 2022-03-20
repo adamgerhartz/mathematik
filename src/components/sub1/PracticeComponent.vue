@@ -6,6 +6,8 @@
       @init-submit="initSubmit"
       @refresh="refresh"
       @hint="getHint"
+      @submit-clicked="onSubmitClicked"
+      :isAnswer="isUserAnswer"
     />
     <addition-component 
       @sequence="trackSequence"
@@ -13,8 +15,12 @@
     <subtraction-component 
       v-else
       @sequence="trackSequence"
+      @user-answer="getUserAnswer"
+      @system-answer="getSystemAnswer"
     />
-    <submit-component  />
+    <submit-component
+      :submit="isSubmitClicked"
+      :answers="answers"/>
   </div>
 </template>
 
@@ -39,8 +45,21 @@ import SubmitComponent from './sub2/SubmitComponent.vue';
   data() {
     return {
       isSubmitted: false,
-      sequence: {}
+      sequence: {},
+      userAnswer: '',
+      systemAnswer: '',
+      answers: [],
+      isSubmitClicked: false
     }
+  },
+  computed: {
+    isUserAnswer() {
+      console.log(this.userAnswer)
+      if (this.userAnswer !== '') {
+        return false;
+      }
+      return true;
+    },
   },
   methods: {
     goHome() {
@@ -57,6 +76,35 @@ import SubmitComponent from './sub2/SubmitComponent.vue';
     },
     trackSequence(json: string) {
       this.sequence = json;
+    },
+    getUserAnswer(userAnswer: []) {
+      this.userAnswer = '';
+      this.isSubmitClicked = false;
+      for (let i = userAnswer.length - 1; i >= 0; i--) {
+        if (this.userAnswer === '' && userAnswer[i] === '.') {
+          return;
+        }
+        if (userAnswer[i] === '') {
+          return;
+        }
+        this.userAnswer = userAnswer[i] + this.userAnswer;
+        this.answers[0] = this.userAnswer;
+      }
+    },
+    getSystemAnswer(systemAnswer: []) {
+      for (const item in systemAnswer) {
+        this.systemAnswer += systemAnswer[item];
+      }
+      this.answers[0] = this.userAnswer;
+      this.answers[1] = this.systemAnswer;
+    },
+    onSubmitClicked() {
+      console.log("Clicked");
+      console.log(this.answers[0])
+      console.log(this.userAnswer);
+      if (this.answers[0] !== '') {
+        this.isSubmitClicked = true;
+      }
     }
   }
 })
