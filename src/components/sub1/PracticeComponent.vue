@@ -17,10 +17,13 @@
       @sequence="trackSequence"
       @user-answer="getUserAnswer"
       @system-answer="getSystemAnswer"
+      :try-again="isTryAgain"
     />
     <submit-component
       :submit="isSubmitClicked"
-      :answers="answers"/>
+      :answers="answers"
+      @try-again="tryAgain"
+      :isTryAgain="isAnotherTry"/>
   </div>
 </template>
 
@@ -49,7 +52,8 @@ import SubmitComponent from './sub2/SubmitComponent.vue';
       userAnswer: '',
       systemAnswer: '',
       answers: [],
-      isSubmitClicked: false
+      isSubmitClicked: false,
+      isAnotherTry: false
     }
   },
   computed: {
@@ -99,12 +103,14 @@ import SubmitComponent from './sub2/SubmitComponent.vue';
       this.answers[1] = this.systemAnswer;
     },
     onSubmitClicked() {
-      console.log("Clicked");
-      console.log(this.answers[0])
-      console.log(this.userAnswer);
+      console.log("answers[0] === " + this.answers[0]);
+      this.isAnotherTry = false;
       if (this.answers[0] !== '') {
         this.isSubmitClicked = true;
       }
+    },
+    tryAgain() {
+      this.isAnotherTry = true;
     }
   }
 })

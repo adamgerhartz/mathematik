@@ -66,6 +66,9 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       }
     })
   },
+  props: {
+    isTryAgain: Boolean
+  },
   data() {
     return {
       numInitialLeft: generateRandomNumber(),
@@ -525,7 +528,9 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
     },
   }
 })
-export default class SubtractionComponent extends Vue {}
+export default class SubtractionComponent extends Vue {
+  isTryAgain!: boolean
+}
 </script>
 
 <!-- STYLE -->
