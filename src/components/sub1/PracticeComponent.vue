@@ -4,20 +4,24 @@
     <nav-menu-component 
       @go-home="goHome"
       @init-submit="initSubmit"
-      @refresh="refresh"
+      @refresh="onRefresh"
       @hint="getHint"
       @submit-clicked="onSubmitClicked"
       :isAnswer="isUserAnswer"
     />
-    <addition-component 
+    <addition-component
       @sequence="trackSequence"
       v-if="practiceType === 'addition'"/>
     <subtraction-component 
+      :key="subtractionKey"
       v-else
       @sequence="trackSequence"
       @user-answer="getUserAnswer"
       @system-answer="getSystemAnswer"
-      :try-again="isTryAgain"
+      @left="getLeft"
+      @right="getRight"
+      :leftO="isAnotherTry ? leftOperand : '0'"
+      :rightO="isAnotherTry ? rightOperand : '0'"
     />
     <submit-component
       :submit="isSubmitClicked"
@@ -53,17 +57,20 @@ import SubmitComponent from './sub2/SubmitComponent.vue';
       systemAnswer: '',
       answers: [],
       isSubmitClicked: false,
-      isAnotherTry: false
+      isAnotherTry: false,
+      additionKey: 0,
+      subtractionKey: 0,
+      leftOperand: '',
+      rightOperand: ''
     }
   },
   computed: {
     isUserAnswer() {
-      console.log(this.userAnswer)
       if (this.userAnswer !== '') {
         return false;
       }
       return true;
-    },
+    }
   },
   methods: {
     goHome() {
@@ -72,11 +79,35 @@ import SubmitComponent from './sub2/SubmitComponent.vue';
     initSubmit() {
       this.isSubmitted = true;
     },
+    onRefresh() {
+      this.isAnotherTry = false;
+      this.refresh();
+    },
     refresh() {
-      this.isSubmitted = false;
+      if (!this.isAnotherTry) {
+        this.leftOperand = '0';
+        this.rightOperand = '0';
+      }
+      if (this.practiceType === 'subtraction') {
+        this.subtractionKey = this.subtractionKey + 1;
+        this.additionKey = 0;
+      } else if (this.practiceType === 'addition') {
+        this.additionKey = this.additionKey + 1;
+        this.subtractionKey = 0;
+      }
+      this.isSubmitClicked = false;
+      this.answers = [];
+      this.userAnswer = '';
+      this.systemAnswer = '';
     },
     getHint() {
       console.log("Get Hint");
+    },
+    getLeft(left: string) {
+      this.leftOperand = left;
+    },
+    getRight(right: string) {
+      this.rightOperand = right;
     },
     trackSequence(json: string) {
       this.sequence = json;
@@ -103,7 +134,6 @@ import SubmitComponent from './sub2/SubmitComponent.vue';
       this.answers[1] = this.systemAnswer;
     },
     onSubmitClicked() {
-      console.log("answers[0] === " + this.answers[0]);
       this.isAnotherTry = false;
       if (this.answers[0] !== '') {
         this.isSubmitClicked = true;
@@ -111,6 +141,7 @@ import SubmitComponent from './sub2/SubmitComponent.vue';
     },
     tryAgain() {
       this.isAnotherTry = true;
+      this.refresh();
     }
   }
 })

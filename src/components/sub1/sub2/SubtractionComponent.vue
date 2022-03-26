@@ -5,7 +5,7 @@
     class="subtraction-problem">
     <span class="top-bumper-2" :style="{ 'grid-template-columns': answerLength }">
       <li v-for="num in topBumper2" :key="num" :ref="'borrow2' + num.id">
-        {{ num }}
+      {{ num }}
       </li>
     </span>
     <span class="top-bumper-1" :style="{ 'grid-template-columns': answerLength }">
@@ -38,7 +38,6 @@
           :ref="'element' + index"
           :class="{ 'visible': isSequence(index), 'clickable': isSequence(index) }"
           @keypress="isNumber($event, index)"
-          :autofocus="sequence === index"
           :disabled="isDisabled(index)"
           @blur="retainValue($event, index)" />
       </li>
@@ -64,15 +63,26 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       if (systemAnswer) {
         return systemAnswer;
       }
+    }),
+    'left': ((left: string) => {
+      if (left) {
+        return left;
+      }
+    }),
+    'right': ((right: string) => {
+      if (right) {
+        return right;
+      }
     })
   },
   props: {
-    isTryAgain: Boolean
+    leftO: String,
+    rightO: String
   },
   data() {
     return {
-      numInitialLeft: generateRandomNumber(),
-      numInitialRight: generateRandomNumber(),
+      numInitialLeft: 0,
+      numInitialRight: 0,
       strGroomedLeft: '',
       strGroomedRight: '',
       numColumnsInOperand: 0,
@@ -144,15 +154,35 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       return `repeat(${this.systemAnswer.length}, 1fr)`;
     },
   },
+  mounted() {
+    this.moveSequence(true);
+  },
   methods: {
-
+    /*tFocus(index: number) {
+      console.log(this.sequence + " === " + index)
+      if (this.sequence === index) {
+        this.moveSequence(true);
+        return true;
+      } else {
+        return false;
+      }
+    },*/
     setup() {
+      if (this.leftO === "0" && this.rightO === "0") {
+        this.numInitialLeft = generateRandomNumber();
+        this.numInitialRight = generateRandomNumber();
+      } else {
+        this.numInitialLeft = Number(this.leftO);
+        this.numInitialRight = Number(this.rightO);
+      }
       while (this.numInitialLeft < this.numInitialRight) {
         this.numInitialLeft = generateRandomNumber();
       }
       this.numDecimalFractions = Math.max(precision(this.numInitialLeft), precision(this.numInitialRight));
       this.strGroomedLeft = this.numInitialLeft.toFixed(this.numDecimalFractions);
       this.strGroomedRight = this.numInitialRight.toFixed(this.numDecimalFractions);
+      this.$emit("left", this.strGroomedLeft);
+      this.$emit("right", this.strGroomedRight);
       this.numColumnsInOperand = greatestNumColumn(this.strGroomedLeft, this.strGroomedRight);
       this.computeMathProblem();
       this.initUserInput();
@@ -324,12 +354,15 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
     },
 
     retainValue(event: any, index: number) {
-      if (this.sequence === index) {
-        const el = eval(`this.$refs.element${this.sequence}[0]`);
-        el.value = this.retainedValue;
-        el.disabled = true;
-        this.userAnswer[this.sequence] = this.retainedValue;
-        
+      if (this.leftO !== '0') {
+        if (this.sequence === index) {
+          const el = eval(`this.$refs.element${this.sequence}[0]`);
+          el.value = this.retainedValue;
+          el.disabled = true;
+          this.userAnswer[this.sequence] = this.retainedValue;
+          this.moveSequence(true);
+        }
+      } else {
         this.moveSequence(true);
       }
     },
@@ -530,6 +563,8 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
 })
 export default class SubtractionComponent extends Vue {
   isTryAgain!: boolean
+  leftO!: string
+  rightO!: string
 }
 </script>
 
