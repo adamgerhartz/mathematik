@@ -2,7 +2,7 @@
 <template>
   <div class="nav">
     <button type="button" @click="goHome">Home</button>
-    <button type="button" @click="refresh">Refresh</button>
+    <button type="button" @click="refresh">New Problem</button>
     <button type="button">Hint</button>
     <button type="button" :disabled="isAnswer" @click="triggerSubmissionComponent">Submit</button>
   </div>

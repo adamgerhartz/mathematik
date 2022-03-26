@@ -354,15 +354,11 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
     },
 
     retainValue(event: any, index: number) {
-      if (this.leftO !== '0') {
-        if (this.sequence === index) {
-          const el = eval(`this.$refs.element${this.sequence}[0]`);
-          el.value = this.retainedValue;
-          el.disabled = true;
-          this.userAnswer[this.sequence] = this.retainedValue;
-          this.moveSequence(true);
-        }
-      } else {
+      if (this.sequence === index) {
+        const el = eval(`this.$refs.element${this.sequence}[0]`);
+        el.value = this.retainedValue;
+        el.disabled = true;
+        this.userAnswer[this.sequence] = this.retainedValue;
         this.moveSequence(true);
       }
     },
