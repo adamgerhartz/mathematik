@@ -25,7 +25,7 @@
           @keypress="isNumber($event, index)"
           :autofocus="sequence === index"
           :disabled="isDisabled(index)"
-          @blur="retainValue(index)" />
+          @blur="retainValue($event, index)" />
       </li>
     </div>
   </div>
@@ -39,12 +39,39 @@ import { precision } from '../../../utils/NumberPrecisionDetector';
 import { greatestNumColumn } from '../../../utils/CompareColumnLength';
 
 @Options({
+  emits: {
+    'user-answer': ((userAnswer: []) => {
+      if (userAnswer[userAnswer.length - 1] !== '') {
+        return userAnswer;
+      }
+    }),
+    'system-answer': ((systemAnswer: []) => {
+      if (systemAnswer) {
+        return systemAnswer;
+      }
+    }),
+    'left': ((left: string) => {
+      if (left) {
+        return left;
+      }
+    }),
+    'right': ((right: string) => {
+      if (right) {
+        return right;
+      }
+    })
+  },
+  props: {
+    leftO: String,
+    rightO: String
+  },
+  mounted() {
+    this.moveSequence(true);
+  },
   data() {
     return {
-      //numInitialLeft: generateRandomNumber(),
-      //numInitialRight: generateRandomNumber(),
-      numInitialLeft: 999.9,
-      numInitialRight: 888.8,
+      numInitialLeft: 0,
+      numInitialRight: 0,
       strGroomedLeft: '',
       strGroomedRight: '',
       numColumnsInOperand: 0,
@@ -110,9 +137,18 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
   methods: {
 
     setup() {
+      if (this.leftO === "0" && this.rightO === "0") {
+        this.numInitialLeft = generateRandomNumber();
+        this.numInitialRight = generateRandomNumber();
+      } else {
+        this.numInitialLeft = Number(this.leftO);
+        this.numInitialRight = Number(this.rightO);
+      }
       this.numDecimalFractions = Math.max(precision(this.numInitialLeft), precision(this.numInitialRight));
       this.strGroomedLeft = this.numInitialLeft.toFixed(this.numDecimalFractions);
       this.strGroomedRight = this.numInitialRight.toFixed(this.numDecimalFractions);
+      this.$emit("left", this.strGroomedLeft);
+      this.$emit("right", this.strGroomedRight);
       this.numColumnsInOperand = greatestNumColumn(this.strGroomedLeft, this.strGroomedRight);
       this.computeMathProblem();
       this.initUserInput();
@@ -144,13 +180,13 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       }
     },
 
-    retainValue(index: number) {
+    retainValue(event: any, index: number) {
       if (this.sequence === index) {
         const el = eval(`this.$refs.element${this.sequence}[0]`);
         el.value = this.retainedValue;
         el.disabled = true;
         this.userInput[this.sequence] = this.retainedValue;
-        this.moveSequence();
+        this.moveSequence(true);
       }
     },
 
@@ -171,7 +207,7 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       return false;
     },
 
-    moveSequence() {
+    moveSequence(isOverride: boolean) {
       let index = this.userInput.length - 1;
       if (this.onEdit) {
         index = this.sequence;
@@ -184,18 +220,20 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
           break;
         }
       }
-      if (index !== -1) {
-        const el = eval(`this.$refs.element${this.sequence}[0]`);
-        el.disabled = false;
-        this.retainedValue = el.value;
-        el.value = '';
-        if (!this.onEdit) {
-          el.classList.add("visible");
-          el.classList.add("clickable");
+      if (this.onEdit || isOverride) {
+        if (index !== -1) {
+          const el = eval(`this.$refs.element${this.sequence}[0]`);
+          el.disabled = false;
+          this.retainedValue = el.value;
+          el.value = '';
+          if (!this.onEdit) {
+            el.classList.add("visible");
+            el.classList.add("clickable");
+          }
+          el.focus();
+        } else {
+          this.sequence = -1;
         }
-        el.focus();
-      } else {
-        this.sequence = -1;
       }
     },
 
@@ -209,7 +247,7 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
           return;
         }
         this.sequence = index;
-        this.moveSequence();
+        this.moveSequence(false);
       }
     },
 
@@ -257,6 +295,7 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
           }
         }
       } // end for loop
+      this.$emit('system-answer', this.answer);
       this.sequence = this.answer.length - 1;
     },
 
@@ -286,7 +325,8 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
           this.currentUserInput = this.userInput[index];
           this.currentUserInputIndex = index;
           this.autoCarry();
-          this.moveSequence();
+          this.$emit('user-answer', this.userInput);
+          this.moveSequence(true);
           return true;
         } else {
           event.preventDefault();
@@ -307,7 +347,10 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
     },
   }
 })
-export default class AdditionComponent extends Vue {}
+export default class AdditionComponent extends Vue {
+  leftO!: string
+  rightO!: string
+}
 </script>
 
 <!-- STYLE -->

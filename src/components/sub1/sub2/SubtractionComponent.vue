@@ -372,6 +372,24 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
                 el = eval(`this.$refs.borrow2undefined[${index + 1}]`);
                 el.style.visibility = 'visible';
                 this.topBumper2Visibility[index + 1] = true;
+              } else if (this.left[index + 1] === '.') {
+                if (this.topBumper1Visibility[index + 2]) {
+                  let el = eval(`this.$refs.borrow1${index + 2}[0]`);
+                  el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+                  if (el.innerHTML.length === 1) {
+                    el.style.padding = "0 0.30em";
+                  }
+                  el = eval(`this.$refs.borrow2undefined[${index + 2}]`);
+                  el.style.visibility = 'visible';
+                  this.topBumper2Visibility[index + 2] = true;
+                } else {
+                  let el = eval(`this.$refs.lefto${index + 2}[0]`);
+                  el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+                  el.style.padding = "0 0.15em";
+                  el = eval(`this.$refs.borrow1${index + 2}[0]`);
+                  el.style.visibility = 'visible';
+                  this.topBumper1Visibility[index + 2] = true;
+                }
               } else {
                 let el = eval(`this.$refs.lefto${index + 1}[0]`);
                 el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";

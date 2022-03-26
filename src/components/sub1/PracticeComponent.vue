@@ -10,8 +10,16 @@
       :isAnswer="isUserAnswer"
     />
     <addition-component
+      :key="additionKey"
       @sequence="trackSequence"
-      v-if="practiceType === 'addition'"/>
+      v-if="practiceType === 'addition'"
+      @user-answer="getUserAnswer"
+      @system-answer="getSystemAnswer"
+      @left="getLeft"
+      @right="getRight"
+      :leftO="isAnotherTry ? leftOperand : '0'"
+      :rightO="isAnotherTry ? rightOperand : '0'"
+    />
     <subtraction-component 
       :key="subtractionKey"
       v-else
