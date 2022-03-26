@@ -158,15 +158,6 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
     this.moveSequence(true);
   },
   methods: {
-    /*tFocus(index: number) {
-      console.log(this.sequence + " === " + index)
-      if (this.sequence === index) {
-        this.moveSequence(true);
-        return true;
-      } else {
-        return false;
-      }
-    },*/
     setup() {
       if (this.leftO === "0" && this.rightO === "0") {
         this.numInitialLeft = generateRandomNumber();
@@ -289,6 +280,14 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
                 el = eval(`this.$refs.borrow2undefined[${index + 2}]`);
                 el.style.visibility = 'visible';
                 this.topBumper2Visibility[index + 2] = true;
+              } else if (this.left[index + 1] === "0") {
+                this.borrowClicked = true;
+                let el = eval(`this.$refs.lefto${index + 1}[0]`);
+                el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+                el.style.padding = "0 0.15em";
+                el = eval(`this.$refs.borrow1${index + 1}[0]`);
+                el.style.visibility = 'visible';
+                this.topBumper1Visibility[index + 1] = true;
               } else {
                 this.borrowClicked = true;
                 let el = eval(`this.$refs.borrow1${index + 1}[0]`);
@@ -305,14 +304,18 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
             if (Number(this.left[this.sequenceCopy]) < Number(this.right[this.sequenceCopy])) {
               let el = eval(`this.$refs.borrow1${index}[0]`);
               el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
-              //el.style.padding = "0 0.15em";
+              if (el.innerHTML.length === 1) {
+                el.style.padding = "0 0.30em";
+              }
               el = eval(`this.$refs.borrow2undefined[${index}]`);
               el.style.visibility = 'visible';
               this.topBumper2Visibility[index] = true;
               if (this.left[index + 1] === "." && this.topBumper1Visibility[this.sequenceCopy]) {
                 let el = eval(`this.$refs.borrow1${index + 2}[0]`);
                 el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
-                //el.style.padding = "0 0.15em";
+                if (el.innerHTML.length === 1) {
+                  el.style.padding = "0 0.30em";
+                }
                 el = eval(`this.$refs.borrow2undefined[${index + 2}]`);
                 el.style.visibility = 'visible';
                 this.topBumper2Visibility[index + 2] = true;
@@ -334,12 +337,42 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
                 } else {
                   let el = eval(`this.$refs.borrow1${index + 1}[0]`);
                   el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
-                  //el.style.padding = "0 0.15em";
+                  if (el.innnerHTML.length === 1) {
+                    el.style.padding = "0 0.30em";
+                  }
                   el = eval(`this.$refs.borrow2undefined[${index + 1}]`);
                   el.style.visibility = 'visible';
                   this.topBumper2Visibility[index + 1] = true;
                 }
               } else if (index + 1 === this.sequenceCopy) {
+                let el = eval(`this.$refs.lefto${index + 1}[0]`);
+                el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+                el.style.padding = "0 0.15em";
+                el = eval(`this.$refs.borrow1${index + 1}[0]`);
+                el.style.visibility = 'visible';
+                this.topBumper1Visibility[index + 1] = true;
+              }
+            }
+          } else {
+            if (Number(this.topBumper1[this.sequenceCopy]) < Number(this.right[this.sequenceCopy])) {
+              let el = eval(`this.$refs.borrow1${index}[0]`);
+              el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+              if (el.innerHTML.length === 1) {
+                el.style.padding = "0 0.30em";
+              }
+              el = eval(`this.$refs.borrow2undefined[${index}]`);
+              el.style.visibility = 'visible';
+              this.topBumper2Visibility[index] = true;
+              if (this.topBumper1Visibility[index + 1]) {
+                let el = eval(`this.$refs.borrow1${index + 1}[0]`);
+                el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+                if (el.innerHTML.length === 1) {
+                  el.style.padding = "0 0.30em";
+                }
+                el = eval(`this.$refs.borrow2undefined[${index + 1}]`);
+                el.style.visibility = 'visible';
+                this.topBumper2Visibility[index + 1] = true;
+              } else {
                 let el = eval(`this.$refs.lefto${index + 1}[0]`);
                 el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
                 el.style.padding = "0 0.15em";
