@@ -5,27 +5,33 @@
       @go-home="goHome"
       @init-submit="initSubmit"
       @refresh="onRefresh"
-      @hint="getHint"
+      @on-hint-triggered="sendHint"
       @submit-clicked="onSubmitClicked"
       :isAnswer="isUserAnswer"
+      :onSequence="sequence === -1"
     />
     <addition-component
       :key="additionKey"
-      @sequence="trackSequence"
+      :isHintTriggered="isHint"
+      @hint-update="updateHintStatus"
       v-if="practiceType === 'addition'"
       @user-answer="getUserAnswer"
       @system-answer="getSystemAnswer"
       @left="getLeft"
+      @sequence="getSequence"
       @right="getRight"
+      @rare-new-problem="createNewProblem"
       :leftO="isAnotherTry ? leftOperand : '0'"
       :rightO="isAnotherTry ? rightOperand : '0'"
     />
-    <subtraction-component 
+    <subtraction-component
       :key="subtractionKey"
+      :isHintTriggered="isHint"
+      @hint-update="updateHintStatus"
       v-else
-      @sequence="trackSequence"
       @user-answer="getUserAnswer"
       @system-answer="getSystemAnswer"
+      @sequence="getSequence"
       @left="getLeft"
       @right="getRight"
       :leftO="isAnotherTry ? leftOperand : '0'"
@@ -60,7 +66,6 @@ import SubmitComponent from './sub2/SubmitComponent.vue';
   data() {
     return {
       isSubmitted: false,
-      sequence: {},
       userAnswer: '',
       systemAnswer: '',
       answers: [],
@@ -69,7 +74,9 @@ import SubmitComponent from './sub2/SubmitComponent.vue';
       additionKey: 0,
       subtractionKey: 0,
       leftOperand: '',
-      rightOperand: ''
+      rightOperand: '',
+      isHint: false,
+      sequence: 0
     }
   },
   computed: {
@@ -84,14 +91,15 @@ import SubmitComponent from './sub2/SubmitComponent.vue';
     goHome() {
       console.log("Go Home");
     },
-    initSubmit() {
-      this.isSubmitted = true;
-    },
     onRefresh() {
       this.isAnotherTry = false;
       this.refresh();
     },
+    getSequence(sequence: number) {
+      this.sequence = sequence;
+    },
     refresh() {
+      this.isHint = false;
       if (!this.isAnotherTry) {
         this.leftOperand = '0';
         this.rightOperand = '0';
@@ -108,17 +116,21 @@ import SubmitComponent from './sub2/SubmitComponent.vue';
       this.userAnswer = '';
       this.systemAnswer = '';
     },
-    getHint() {
-      console.log("Get Hint");
+    updateHintStatus(hintStatus: boolean) {
+      this.isHint = hintStatus;
+    },
+    sendHint() {
+      this.isHint = true;
+    },
+    createNewProblem() {
+      this.additionKey = this.additionKey + 1;
+      this.subtractionKey = 0;
     },
     getLeft(left: string) {
       this.leftOperand = left;
     },
     getRight(right: string) {
       this.rightOperand = right;
-    },
-    trackSequence(json: string) {
-      this.sequence = json;
     },
     getUserAnswer(userAnswer: []) {
       this.userAnswer = '';

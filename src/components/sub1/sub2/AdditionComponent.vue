@@ -1,5 +1,8 @@
 <!-- TEMPLATE -->
 <template>
+  <div class="hint" v-if="isHint">
+    <p class="hint-text" :ref="hint-text"><b>👀 Hint: </b>{{ hint }}</p>
+  </div>
   <div
     :style="{ 'grid-template-columns': columnLengthOperand, 'margin-left': dynamicCrunch }"
     class="addition-problem">
@@ -59,9 +62,19 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       if (right) {
         return right;
       }
+    }),
+    'hint-update': ((hintValue: boolean) => {
+      return hintValue;
+    }),
+    'rare-new-problem': (() => {
+      return true;
+    }),
+    'sequence': ((seq: number) => {
+      return seq;
     })
   },
   props: {
+    isHintTriggered: Boolean,
     leftO: String,
     rightO: String
   },
@@ -76,8 +89,8 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       strGroomedRight: '',
       numColumnsInOperand: 0,
       numDecimalFractions: 0,
-      leftArray: [],
-      rightArray: [],
+      left: [],
+      right: [],
       topBumper: [],
       userInput: [],
       currentUserInput: '',
@@ -87,13 +100,36 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       sequence: 0,
       copySequence: 0,
       onEdit: false,
-      retainedValue: ''
+      retainedValue: '',
+      isHint: false
     }
   },
   created() {
     this.setup();
   },
   computed: {
+    hint() {
+      for (let i = this.userInput.length - 1; i >= this.sequence; i--) {
+        if (this.userInput[i] === '.') {
+          continue;
+        }
+        if (this.userInput[i] !== '') {
+          if (this.userInput[i] !== this.answer[i]) {
+            if (this.topBumper[i]) {
+              return `${this.topBumper[i]} + ${this.left[i]} + ${this.right[i]} does not equal ${this.userInput[i]}`
+            } else {
+              return `${this.left[i]} + ${this.right[i]} does not equal ${this.userInput[i]}`
+            }
+          }
+        } else {
+          if (this.topBumper[i]) {
+            return `${this.topBumper[i]} + ${this.left[i]} + ${this.right[i]}`;
+          } else {
+            return `${this.left[i]} + ${this.right[i]}`;
+          }
+        }
+      }
+    },
     strArrayLeft() {
       return this.alignColumns('', this.strGroomedLeft);
     },
@@ -134,6 +170,13 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       return `repeat(${this.answer.length}, 1fr)`;
     },
   },
+  watch: {
+    isHintTriggered(value: any) {
+      if (value) {
+        this.isHint = true;
+      }
+    }
+  },
   methods: {
 
     setup() {
@@ -143,6 +186,10 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       } else {
         this.numInitialLeft = Number(this.leftO);
         this.numInitialRight = Number(this.rightO);
+      }
+      while (this.numInitialLeft.toString().length === "1" || this.numInitialRight.toString().length === "1") {
+        this.numInitialLeft = generateRandomNumber();
+        this.numInitialRight = generateRandomNumber();
       }
       this.numDecimalFractions = Math.max(precision(this.numInitialLeft), precision(this.numInitialRight));
       this.strGroomedLeft = this.numInitialLeft.toFixed(this.numDecimalFractions);
@@ -181,12 +228,25 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
     },
 
     retainValue(event: any, index: number) {
-      if (this.sequence === index) {
+      let isFull = true;
+      for (let i = 0; i < this.userInput.length; i++) {
+        if (this.userInput[i] === '') {
+          isFull = false;
+        }
+      }
+      if (this.onEdit && isFull) {
         const el = eval(`this.$refs.element${this.sequence}[0]`);
         el.value = this.retainedValue;
         el.disabled = true;
         this.userInput[this.sequence] = this.retainedValue;
-        this.moveSequence(true);
+      } else {
+        if (this.sequence === index) {
+          const el = eval(`this.$refs.element${this.sequence}[0]`);
+          el.value = this.retainedValue;
+          el.disabled = true;
+          this.userInput[this.sequence] = this.retainedValue;
+          this.moveSequence(true);
+        }
       }
     },
 
@@ -235,9 +295,12 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
           this.sequence = -1;
         }
       }
+      this.$emit("sequence", this.sequence);
     },
 
     moveSequenceOnEdit(index: number) {
+      this.isHint = false;
+      this.$emit("hint-update", false);
       this.onEdit = true;
       if (this.userInput[index] !== '.') {
         this.userInput[index] = '';
@@ -264,17 +327,17 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
     },
 
     computeMathProblem() {
-      const left = this.alignColumns('0', this.strGroomedLeft);
-      const right = this.alignColumns('0', this.strGroomedRight);
-      for (const item of left) {
+      this.left = this.alignColumns('0', this.strGroomedLeft);
+      this.right = this.alignColumns('0', this.strGroomedRight);
+      for (const item of this.left) {
         (item !== '.') ? this.topBumper.push('') : this.topBumper.push('.');
         (item !== '.') ? this.answer.push('0') : this.answer.push('.');
       }
 
       for (let i = this.numColumnsInOperand - 1; i >= 0; i--) {
         // use left[i] only because the decimal points are already aligned properly
-        if (left[i] !== '.') {
-          const answer = (Number(left[i]) + Number(right[i]) + Number(this.answer[i])).toString();
+        if (this.left[i] !== '.') {
+          const answer = (Number(this.left[i]) + Number(this.right[i]) + Number(this.answer[i])).toString();
           // carry over logic
           if (answer.length === 2) {
             const twoDigitNumber = Array.from(answer);
@@ -295,11 +358,20 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
           }
         }
       } // end for loop
+
+      // edge case: remove additional carry-over
+      if (this.topBumper[0] && this.topBumper.length > this.left.length && this.topBumper.length > this.right.length) {
+        this.$emit("rare-new-problem");
+        return;
+      }
+
       this.$emit('system-answer', this.answer);
       this.sequence = this.answer.length - 1;
     },
 
     isNumber(event: any, index: number) {
+      this.isHint = false;
+      this.$emit("hint-update", false);
       if ( event.key === '0' ||
            event.key === '1' ||
            event.key === '2' ||
@@ -350,11 +422,31 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
 export default class AdditionComponent extends Vue {
   leftO!: string
   rightO!: string
+  isHintTriggered!: boolean
 }
 </script>
 
 <!-- STYLE -->
 <style scoped lang="scss">
+.hint {
+  grid-column: 4/7;
+  grid-row: 2/3;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: auto;
+  background: tan;
+  border-radius: 5px;
+}
+
+.hint-text {
+  margin: auto;
+  grid-column: 1/5;
+  grid-row: 1/2;
+  text-align: center;
+  font-family: lato;
+  letter-spacing: 1.5px;
+}
+
 .addition-problem {
   grid-column: 4/7;
   grid-row: 2/8;

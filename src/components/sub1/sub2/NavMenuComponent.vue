@@ -3,7 +3,7 @@
   <div class="nav">
     <button type="button" @click="goHome">Home</button>
     <button type="button" @click="refresh">New Problem</button>
-    <button type="button">Hint</button>
+    <button type="button" :disabled="onSequence" @click="sendHint">Hint</button>
     <button type="button" :disabled="isAnswer" @click="triggerSubmissionComponent">Submit</button>
   </div>
 </template>
@@ -13,7 +13,12 @@
 import { Options, Vue } from 'vue-class-component';
 
 @Options({
-  emits: ['go-home', 'submit-clicked', 'refresh'],
+  emits: [
+    'go-home',
+    'submit-clicked',
+    'refresh',
+    'on-hint-triggered'
+  ],
   methods: {
     goHome() {
       this.$emit('go-home');
@@ -23,14 +28,19 @@ import { Options, Vue } from 'vue-class-component';
     },
     refresh() {
       this.$emit('refresh');
+    },
+    sendHint() {
+      this.$emit('on-hint-triggered');
     }
   },
   props: {
-    isAnswer: Boolean
+    isAnswer: Boolean,
+    onSequence: Boolean
   },
 })
 export default class NavMenuComponent extends Vue {
   isAnswer!: boolean
+  onSequence!: boolean
 }
 </script>
 

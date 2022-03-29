@@ -1,5 +1,8 @@
 <!-- TEMPLATE -->
 <template>
+  <div class="hint" v-if="isHint">
+    <p class="hint-text" :ref="hint-text"><b>👀 Hint: </b>{{ hint }}</p>
+  </div>
   <div
     :style="{ 'grid-template-columns': columnLengthOperand, 'margin-left': dynamicCrunch }"
     class="subtraction-problem">
@@ -73,6 +76,9 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       if (right) {
         return right;
       }
+    }),
+    'sequence': ((seq: number) => {
+      return seq;
     })
   },
   props: {
@@ -105,13 +111,64 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       retainedValue: '',
       operandClicked: false,
       borrowClicked: false,
-      blurDetected: false
+      blurDetected: false,
+      isHint: false,
+      currentHoverEl: 'Current State',
+      counter: 1
     }
   },
   created() {
     this.setup();
   },
+  watch: {
+    isHintTriggered(value: any) {
+      if (value) {
+        this.isHint = true;
+      } else {
+        this.isHint = false;
+      }
+    }
+  },
   computed: {
+    hint() {
+      for (let i = this.userAnswer.length - 1; i >= this.sequence; i--) {
+        if (this.userAnswer[i] === '.') {
+          continue;
+        }
+        if (this.topBumper2[i] !== '' && this.topBumper2Visibility[i]) {
+          if (this.userAnswer[i] !== '' && this.userAnswer[i] !== this.systemAnswer[i]) {
+            return `${this.topBumper2[i]} - ${this.right[i]} does not equal ${this.userAnswer[i]}`;
+          } else if (this.userAnswer[i] === '') {
+            return `${this.topBumper2[i]} - ${this.right[i]}`;
+          }
+        } else if (this.topBumper2[i] !== '' && !this.topBumper2Visibility[i]) {
+          if (this.currentHoverEl !== '') {
+            const el = eval(`${this.currentHoverEl}`);
+            el.style.background = "green";
+          }
+          return "Highlight";
+        } else if (this.topBumper1[i] !== '' && this.topBumper1Visibility[i]) {
+          if (this.userAnswer[i] !== '' && this.userAnswer[i] !== this.systemAnswer[i]) {
+            return `${this.topBumper1[i]} - ${this.right[i]} does not equal ${this.userAnswer[i]}`;
+          } else if (this.userAnswer[i] === '') {
+            return `${this.topBumper1[i]} - ${this.right[i]}`;
+          }
+        } else if (this.topBumper1[i] !== '' && !this.topBumper1Visibility[i]) {
+          // highlight hover
+          if (this.currentHoverEl !== '') {
+            const el = eval(`${this.currentHoverEl}`);
+            el.style.background = "green";
+          }
+          return "Highlight";
+        } else {
+          if (this.userAnswer[i] !== '' && this.userAnswer[i] !== this.systemAnswer[i]) {
+            return `${this.left[i]} - ${this.right[i]} does not equal ${this.userAnswer[i]}`;
+          } else if (this.userAnswer[i] === '') {
+            return `${this.left[i]} - ${this.right[i]}`;
+          }
+        }
+      }
+    },
     strArrayLeft() {
       return this.alignColumns('', this.strGroomedLeft);
     },
@@ -181,6 +238,9 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
     },
 
     isHover(index: number, isLeftOperand: boolean) {
+      if (index > this.sequence) {
+        return;
+      }
       // initial state
       if (this.sequenceCopy === -1 && index !== this.left.length - 1) {
         return;
@@ -197,38 +257,48 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
         if (Number(this.left[this.sequence]) < Number(this.right[this.sequence]) && !this.topBumper1Visibility[this.sequence]) {
           if (isLeftOperand) {
             if (this.topBumper1[this.sequence - offset] && !this.topBumper1Visibility[this.sequence - offset]) {
+              this.currentHoverEl = `this.$refs.lefto${this.sequence - offset}[0]`;
               return true;
             } else if (this.topBumper1[this.sequence - offset] && this.topBumper1Visibility[this.sequence - offset]) {
+              this.currentHoverEl = '';
               return false;
             }
           } else {
             if (this.topBumper2[this.sequence - offset] && this.topBumper1Visibility[this.sequence - offset] && !this.topBumper2Visibility[this.sequence - offset]) {
+              this.currentHoverEl = `this.$refs.borrow1${this.sequence - offset}[0]`;
               return true;
             } else if (this.topBumper2[this.sequence - offset] && this.topBumper1Visibility[this.sequence - offset] && this.topBumper2Visibility[this.sequence - offset]) {
+              this.currentHoverEl = '';
               return false;
             }
           }
         } else if (Number(this.topBumper1[this.sequence]) < Number(this.right[this.sequence]) && this.topBumper1Visibility[this.sequence]) {
           if (isLeftOperand) {
             if (this.topBumper1[this.sequence - offset] && !this.topBumper1Visibility[this.sequence - offset]) {
+              this.currentHoverEl = `this.$refs.lefto${this.sequence - offset}[0]`;
               return true;
             } else if (this.topBumper1[this.sequence - offset] && this.topBumper1Visibility[this.sequence - offset]) {
+              this.currentHoverEl = '';
               return false;
             }
           } else {
             if (this.topBumper2[this.sequence - offset] && this.topBumper1Visibility[this.sequence - offset] && !this.topBumper2Visibility[this.sequence - offset]) {
+              this.currentHoverEl = `this.$refs.borrow1${this.sequence - offset}[0]`;
               return true;
             } else if (this.topBumper2[this.sequence - offset] && this.topBumper1Visibility[this.sequence - offset] && this.topBumper2Visibility[this.sequence - offset]) {
+              this.currentHoverEl = '';
               return false;
             }
           }
         } else {
+          this.currentHoverEl = '';
           return false;
         }
       }
     },
 
     borrow(index: number, isLeftOperand: boolean) {
+      console.log(`count == ${this.counter}`);
       this.borrowClicked = false;
       let offset = 1;
       while ((this.left[this.sequenceCopy - offset] === '.' || this.left[this.sequenceCopy - offset] === '0') && !this.topBumper1Visibility[this.sequenceCopy - offset]) {
@@ -263,6 +333,7 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
                 this.topBumper1Visibility[index + 1] = true;
               }
             }
+            this.isHint = false;
           } else {
             if (Number(this.topBumper1[this.sequenceCopy]) < Number(this.right[this.sequenceCopy])) {
               this.borrowClicked = true;
@@ -298,6 +369,7 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
                 this.topBumper2Visibility[index + 1] = true;
               }
             }
+            this.isHint = false;
           }
         } else if (this.topBumper2[index] && !isLeftOperand && this.topBumper1Visibility[index]) {
           if (!this.topBumper1Visibility[this.sequence]) {
@@ -353,6 +425,7 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
                 this.topBumper1Visibility[index + 1] = true;
               }
             }
+            this.isHint = false;
           } else {
             if (Number(this.topBumper1[this.sequenceCopy]) < Number(this.right[this.sequenceCopy])) {
               let el = eval(`this.$refs.borrow1${index}[0]`);
@@ -399,6 +472,7 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
                 this.topBumper1Visibility[index + 1] = true;
               }
             }
+            this.isHint = false;
           }
         }
       }
@@ -460,9 +534,11 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
           this.sequence = -1;
         }
       }
+      this.$emit("sequence", this.sequence);
     },
 
     moveSequenceOnEdit(index: number) {
+      this.isHint = false;
       this.onEdit = true;
       if (this.userAnswer[index] !== '.') {
         const inputCopy = this.userAnswer[index]
@@ -555,6 +631,7 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
     },
 
     isNumber(event: any, index: number) {
+      this.isHint = false;
       if (event.key === 'Enter' && index === 0) {
         this.userAnswer[index] = '';
         this.onEdit = false;
@@ -612,11 +689,32 @@ export default class SubtractionComponent extends Vue {
   isTryAgain!: boolean
   leftO!: string
   rightO!: string
+  isHintTriggered!: boolean
 }
 </script>
 
 <!-- STYLE -->
 <style scoped lang="scss">
+.hint {
+  grid-column: 4/7;
+  grid-row: 2/3;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: auto;
+  background: tan;
+  border-radius: 5px;
+  margin: -10px 0 10px 0;
+}
+
+.hint-text {
+  margin: auto;
+  grid-column: 1/5;
+  grid-row: 1/2;
+  text-align: center;
+  font-family: lato;
+  letter-spacing: 1.5px;
+}
+
 .subtraction-problem {
   grid-column: 4/7;
   grid-row: 2/8;
