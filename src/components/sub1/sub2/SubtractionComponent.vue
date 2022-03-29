@@ -1,11 +1,14 @@
 <!-- TEMPLATE -->
 <template>
+  <div class="hint" v-if="isHint">
+    <p class="hint-text" :ref="hint-text"><b>👀 Hint: </b>{{ hint }}</p>
+  </div>
   <div
     :style="{ 'grid-template-columns': columnLengthOperand, 'margin-left': dynamicCrunch }"
     class="subtraction-problem">
     <span class="top-bumper-2" :style="{ 'grid-template-columns': answerLength }">
       <li v-for="num in topBumper2" :key="num" :ref="'borrow2' + num.id">
-        {{ num }}
+      {{ num }}
       </li>
     </span>
     <span class="top-bumper-1" :style="{ 'grid-template-columns': answerLength }">
@@ -38,7 +41,6 @@
           :ref="'element' + index"
           :class="{ 'visible': isSequence(index), 'clickable': isSequence(index) }"
           @keypress="isNumber($event, index)"
-          :autofocus="sequence === index"
           :disabled="isDisabled(index)"
           @blur="retainValue($event, index)" />
       </li>
@@ -64,12 +66,29 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       if (systemAnswer) {
         return systemAnswer;
       }
+    }),
+    'left': ((left: string) => {
+      if (left) {
+        return left;
+      }
+    }),
+    'right': ((right: string) => {
+      if (right) {
+        return right;
+      }
+    }),
+    'sequence': ((seq: number) => {
+      return seq;
     })
+  },
+  props: {
+    leftO: String,
+    rightO: String
   },
   data() {
     return {
-      numInitialLeft: generateRandomNumber(),
-      numInitialRight: generateRandomNumber(),
+      numInitialLeft: 0,
+      numInitialRight: 0,
       strGroomedLeft: '',
       strGroomedRight: '',
       numColumnsInOperand: 0,
@@ -92,13 +111,64 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       retainedValue: '',
       operandClicked: false,
       borrowClicked: false,
-      blurDetected: false
+      blurDetected: false,
+      isHint: false,
+      currentHoverEl: 'Current State',
+      counter: 1
     }
   },
   created() {
     this.setup();
   },
+  watch: {
+    isHintTriggered(value: any) {
+      if (value) {
+        this.isHint = true;
+      } else {
+        this.isHint = false;
+      }
+    }
+  },
   computed: {
+    hint() {
+      for (let i = this.userAnswer.length - 1; i >= this.sequence; i--) {
+        if (this.userAnswer[i] === '.') {
+          continue;
+        }
+        if (this.topBumper2[i] !== '' && this.topBumper2Visibility[i]) {
+          if (this.userAnswer[i] !== '' && this.userAnswer[i] !== this.systemAnswer[i]) {
+            return `${this.topBumper2[i]} - ${this.right[i]} does not equal ${this.userAnswer[i]}`;
+          } else if (this.userAnswer[i] === '') {
+            return `${this.topBumper2[i]} - ${this.right[i]}`;
+          }
+        } else if (this.topBumper2[i] !== '' && !this.topBumper2Visibility[i]) {
+          if (this.currentHoverEl !== '') {
+            const el = eval(`${this.currentHoverEl}`);
+            el.style.background = "green";
+          }
+          return "Highlight";
+        } else if (this.topBumper1[i] !== '' && this.topBumper1Visibility[i]) {
+          if (this.userAnswer[i] !== '' && this.userAnswer[i] !== this.systemAnswer[i]) {
+            return `${this.topBumper1[i]} - ${this.right[i]} does not equal ${this.userAnswer[i]}`;
+          } else if (this.userAnswer[i] === '') {
+            return `${this.topBumper1[i]} - ${this.right[i]}`;
+          }
+        } else if (this.topBumper1[i] !== '' && !this.topBumper1Visibility[i]) {
+          // highlight hover
+          if (this.currentHoverEl !== '') {
+            const el = eval(`${this.currentHoverEl}`);
+            el.style.background = "green";
+          }
+          return "Highlight";
+        } else {
+          if (this.userAnswer[i] !== '' && this.userAnswer[i] !== this.systemAnswer[i]) {
+            return `${this.left[i]} - ${this.right[i]} does not equal ${this.userAnswer[i]}`;
+          } else if (this.userAnswer[i] === '') {
+            return `${this.left[i]} - ${this.right[i]}`;
+          }
+        }
+      }
+    },
     strArrayLeft() {
       return this.alignColumns('', this.strGroomedLeft);
     },
@@ -141,15 +211,26 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       return `repeat(${this.systemAnswer.length}, 1fr)`;
     },
   },
+  mounted() {
+    this.moveSequence(true);
+  },
   methods: {
-
     setup() {
+      if (this.leftO === "0" && this.rightO === "0") {
+        this.numInitialLeft = generateRandomNumber();
+        this.numInitialRight = generateRandomNumber();
+      } else {
+        this.numInitialLeft = Number(this.leftO);
+        this.numInitialRight = Number(this.rightO);
+      }
       while (this.numInitialLeft < this.numInitialRight) {
         this.numInitialLeft = generateRandomNumber();
       }
       this.numDecimalFractions = Math.max(precision(this.numInitialLeft), precision(this.numInitialRight));
       this.strGroomedLeft = this.numInitialLeft.toFixed(this.numDecimalFractions);
       this.strGroomedRight = this.numInitialRight.toFixed(this.numDecimalFractions);
+      this.$emit("left", this.strGroomedLeft);
+      this.$emit("right", this.strGroomedRight);
       this.numColumnsInOperand = greatestNumColumn(this.strGroomedLeft, this.strGroomedRight);
       this.computeMathProblem();
       this.initUserInput();
@@ -157,6 +238,9 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
     },
 
     isHover(index: number, isLeftOperand: boolean) {
+      if (index > this.sequence) {
+        return;
+      }
       // initial state
       if (this.sequenceCopy === -1 && index !== this.left.length - 1) {
         return;
@@ -173,38 +257,48 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
         if (Number(this.left[this.sequence]) < Number(this.right[this.sequence]) && !this.topBumper1Visibility[this.sequence]) {
           if (isLeftOperand) {
             if (this.topBumper1[this.sequence - offset] && !this.topBumper1Visibility[this.sequence - offset]) {
+              this.currentHoverEl = `this.$refs.lefto${this.sequence - offset}[0]`;
               return true;
             } else if (this.topBumper1[this.sequence - offset] && this.topBumper1Visibility[this.sequence - offset]) {
+              this.currentHoverEl = '';
               return false;
             }
           } else {
             if (this.topBumper2[this.sequence - offset] && this.topBumper1Visibility[this.sequence - offset] && !this.topBumper2Visibility[this.sequence - offset]) {
+              this.currentHoverEl = `this.$refs.borrow1${this.sequence - offset}[0]`;
               return true;
             } else if (this.topBumper2[this.sequence - offset] && this.topBumper1Visibility[this.sequence - offset] && this.topBumper2Visibility[this.sequence - offset]) {
+              this.currentHoverEl = '';
               return false;
             }
           }
         } else if (Number(this.topBumper1[this.sequence]) < Number(this.right[this.sequence]) && this.topBumper1Visibility[this.sequence]) {
           if (isLeftOperand) {
             if (this.topBumper1[this.sequence - offset] && !this.topBumper1Visibility[this.sequence - offset]) {
+              this.currentHoverEl = `this.$refs.lefto${this.sequence - offset}[0]`;
               return true;
             } else if (this.topBumper1[this.sequence - offset] && this.topBumper1Visibility[this.sequence - offset]) {
+              this.currentHoverEl = '';
               return false;
             }
           } else {
             if (this.topBumper2[this.sequence - offset] && this.topBumper1Visibility[this.sequence - offset] && !this.topBumper2Visibility[this.sequence - offset]) {
+              this.currentHoverEl = `this.$refs.borrow1${this.sequence - offset}[0]`;
               return true;
             } else if (this.topBumper2[this.sequence - offset] && this.topBumper1Visibility[this.sequence - offset] && this.topBumper2Visibility[this.sequence - offset]) {
+              this.currentHoverEl = '';
               return false;
             }
           }
         } else {
+          this.currentHoverEl = '';
           return false;
         }
       }
     },
 
     borrow(index: number, isLeftOperand: boolean) {
+      console.log(`count == ${this.counter}`);
       this.borrowClicked = false;
       let offset = 1;
       while ((this.left[this.sequenceCopy - offset] === '.' || this.left[this.sequenceCopy - offset] === '0') && !this.topBumper1Visibility[this.sequenceCopy - offset]) {
@@ -239,6 +333,7 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
                 this.topBumper1Visibility[index + 1] = true;
               }
             }
+            this.isHint = false;
           } else {
             if (Number(this.topBumper1[this.sequenceCopy]) < Number(this.right[this.sequenceCopy])) {
               this.borrowClicked = true;
@@ -256,6 +351,14 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
                 el = eval(`this.$refs.borrow2undefined[${index + 2}]`);
                 el.style.visibility = 'visible';
                 this.topBumper2Visibility[index + 2] = true;
+              } else if (this.left[index + 1] === "0") {
+                this.borrowClicked = true;
+                let el = eval(`this.$refs.lefto${index + 1}[0]`);
+                el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+                el.style.padding = "0 0.15em";
+                el = eval(`this.$refs.borrow1${index + 1}[0]`);
+                el.style.visibility = 'visible';
+                this.topBumper1Visibility[index + 1] = true;
               } else {
                 this.borrowClicked = true;
                 let el = eval(`this.$refs.borrow1${index + 1}[0]`);
@@ -266,20 +369,25 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
                 this.topBumper2Visibility[index + 1] = true;
               }
             }
+            this.isHint = false;
           }
         } else if (this.topBumper2[index] && !isLeftOperand && this.topBumper1Visibility[index]) {
           if (!this.topBumper1Visibility[this.sequence]) {
             if (Number(this.left[this.sequenceCopy]) < Number(this.right[this.sequenceCopy])) {
               let el = eval(`this.$refs.borrow1${index}[0]`);
               el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
-              //el.style.padding = "0 0.15em";
+              if (el.innerHTML.length === 1) {
+                el.style.padding = "0 0.30em";
+              }
               el = eval(`this.$refs.borrow2undefined[${index}]`);
               el.style.visibility = 'visible';
               this.topBumper2Visibility[index] = true;
               if (this.left[index + 1] === "." && this.topBumper1Visibility[this.sequenceCopy]) {
                 let el = eval(`this.$refs.borrow1${index + 2}[0]`);
                 el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
-                //el.style.padding = "0 0.15em";
+                if (el.innerHTML.length === 1) {
+                  el.style.padding = "0 0.30em";
+                }
                 el = eval(`this.$refs.borrow2undefined[${index + 2}]`);
                 el.style.visibility = 'visible';
                 this.topBumper2Visibility[index + 2] = true;
@@ -301,7 +409,9 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
                 } else {
                   let el = eval(`this.$refs.borrow1${index + 1}[0]`);
                   el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
-                  //el.style.padding = "0 0.15em";
+                  if (el.innnerHTML.length === 1) {
+                    el.style.padding = "0 0.30em";
+                  }
                   el = eval(`this.$refs.borrow2undefined[${index + 1}]`);
                   el.style.visibility = 'visible';
                   this.topBumper2Visibility[index + 1] = true;
@@ -315,6 +425,54 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
                 this.topBumper1Visibility[index + 1] = true;
               }
             }
+            this.isHint = false;
+          } else {
+            if (Number(this.topBumper1[this.sequenceCopy]) < Number(this.right[this.sequenceCopy])) {
+              let el = eval(`this.$refs.borrow1${index}[0]`);
+              el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+              if (el.innerHTML.length === 1) {
+                el.style.padding = "0 0.30em";
+              }
+              el = eval(`this.$refs.borrow2undefined[${index}]`);
+              el.style.visibility = 'visible';
+              this.topBumper2Visibility[index] = true;
+              if (this.topBumper1Visibility[index + 1]) {
+                let el = eval(`this.$refs.borrow1${index + 1}[0]`);
+                el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+                if (el.innerHTML.length === 1) {
+                  el.style.padding = "0 0.30em";
+                }
+                el = eval(`this.$refs.borrow2undefined[${index + 1}]`);
+                el.style.visibility = 'visible';
+                this.topBumper2Visibility[index + 1] = true;
+              } else if (this.left[index + 1] === '.') {
+                if (this.topBumper1Visibility[index + 2]) {
+                  let el = eval(`this.$refs.borrow1${index + 2}[0]`);
+                  el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+                  if (el.innerHTML.length === 1) {
+                    el.style.padding = "0 0.30em";
+                  }
+                  el = eval(`this.$refs.borrow2undefined[${index + 2}]`);
+                  el.style.visibility = 'visible';
+                  this.topBumper2Visibility[index + 2] = true;
+                } else {
+                  let el = eval(`this.$refs.lefto${index + 2}[0]`);
+                  el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+                  el.style.padding = "0 0.15em";
+                  el = eval(`this.$refs.borrow1${index + 2}[0]`);
+                  el.style.visibility = 'visible';
+                  this.topBumper1Visibility[index + 2] = true;
+                }
+              } else {
+                let el = eval(`this.$refs.lefto${index + 1}[0]`);
+                el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+                el.style.padding = "0 0.15em";
+                el = eval(`this.$refs.borrow1${index + 1}[0]`);
+                el.style.visibility = 'visible';
+                this.topBumper1Visibility[index + 1] = true;
+              }
+            }
+            this.isHint = false;
           }
         }
       }
@@ -326,7 +484,6 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
         el.value = this.retainedValue;
         el.disabled = true;
         this.userAnswer[this.sequence] = this.retainedValue;
-        
         this.moveSequence(true);
       }
     },
@@ -377,9 +534,11 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
           this.sequence = -1;
         }
       }
+      this.$emit("sequence", this.sequence);
     },
 
     moveSequenceOnEdit(index: number) {
+      this.isHint = false;
       this.onEdit = true;
       if (this.userAnswer[index] !== '.') {
         const inputCopy = this.userAnswer[index]
@@ -472,6 +631,7 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
     },
 
     isNumber(event: any, index: number) {
+      this.isHint = false;
       if (event.key === 'Enter' && index === 0) {
         this.userAnswer[index] = '';
         this.onEdit = false;
@@ -525,11 +685,36 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
     },
   }
 })
-export default class SubtractionComponent extends Vue {}
+export default class SubtractionComponent extends Vue {
+  isTryAgain!: boolean
+  leftO!: string
+  rightO!: string
+  isHintTriggered!: boolean
+}
 </script>
 
 <!-- STYLE -->
 <style scoped lang="scss">
+.hint {
+  grid-column: 4/7;
+  grid-row: 2/3;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: auto;
+  background: tan;
+  border-radius: 5px;
+  margin: -10px 0 10px 0;
+}
+
+.hint-text {
+  margin: auto;
+  grid-column: 1/5;
+  grid-row: 1/2;
+  text-align: center;
+  font-family: lato;
+  letter-spacing: 1.5px;
+}
+
 .subtraction-problem {
   grid-column: 4/7;
   grid-row: 2/8;

@@ -1,12 +1,12 @@
 <!-- TEMPLATE -->
 <template>
   <div class="submit">
-    <div class="submit-container green" v-if="submit && correct">
+    <div class="submit-container green" v-if="submit && correct && !isTryAgain">
       <p class="correct">Correct! 👍</p>
     </div>
-    <div class="submit-container red" v-else-if="submit && !correct">
+    <div class="submit-container red" v-else-if="submit && !correct && !isTryAgain">
       <p class="incorrect">Incorrect!</p>
-      <button class="try-again">Try Again</button>
+      <button class="try-again" @click="tryAgain">Try Again</button>
     </div>
   </div>
 </template>
@@ -16,26 +16,35 @@
 import { Options, Vue } from 'vue-class-component';
 
 @Options({
+  emits: ['try-again'],
   props: {
     answers: {
       type: Array,
       default: []
     },
-    submit: Boolean
+    submit: Boolean,
+    isTryAgain: Boolean
   },
   computed: {
     correct() {
+      console.log("Called again again");
       if (Number(this.answers[0]) === Number(this.answers[1])) {
         return true;
       } else {
         return false;
       }
     }
+  },
+  methods: {
+    tryAgain() {
+      this.$emit('try-again');
+    }
   }
 })
 export default class SubmitComponent extends Vue {
   answers!: string[]
   submit!: boolean
+  isTryAgain!: boolean
 }
 </script>
 

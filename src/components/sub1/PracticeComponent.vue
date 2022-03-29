@@ -4,23 +4,44 @@
     <nav-menu-component 
       @go-home="goHome"
       @init-submit="initSubmit"
-      @refresh="refresh"
-      @hint="getHint"
+      @refresh="onRefresh"
+      @on-hint-triggered="sendHint"
       @submit-clicked="onSubmitClicked"
       :isAnswer="isUserAnswer"
+      :onSequence="sequence === -1"
     />
-    <addition-component 
-      @sequence="trackSequence"
-      v-if="practiceType === 'addition'"/>
-    <subtraction-component 
-      v-else
-      @sequence="trackSequence"
+    <addition-component
+      :key="additionKey"
+      :isHintTriggered="isHint"
+      @hint-update="updateHintStatus"
+      v-if="practiceType === 'addition'"
       @user-answer="getUserAnswer"
       @system-answer="getSystemAnswer"
+      @left="getLeft"
+      @sequence="getSequence"
+      @right="getRight"
+      @rare-new-problem="createNewProblem"
+      :leftO="isAnotherTry ? leftOperand : '0'"
+      :rightO="isAnotherTry ? rightOperand : '0'"
+    />
+    <subtraction-component
+      :key="subtractionKey"
+      :isHintTriggered="isHint"
+      @hint-update="updateHintStatus"
+      v-else
+      @user-answer="getUserAnswer"
+      @system-answer="getSystemAnswer"
+      @sequence="getSequence"
+      @left="getLeft"
+      @right="getRight"
+      :leftO="isAnotherTry ? leftOperand : '0'"
+      :rightO="isAnotherTry ? rightOperand : '0'"
     />
     <submit-component
       :submit="isSubmitClicked"
-      :answers="answers"/>
+      :answers="answers"
+      @try-again="tryAgain"
+      :isTryAgain="isAnotherTry"/>
   </div>
 </template>
 
@@ -45,37 +66,71 @@ import SubmitComponent from './sub2/SubmitComponent.vue';
   data() {
     return {
       isSubmitted: false,
-      sequence: {},
       userAnswer: '',
       systemAnswer: '',
       answers: [],
-      isSubmitClicked: false
+      isSubmitClicked: false,
+      isAnotherTry: false,
+      additionKey: 0,
+      subtractionKey: 0,
+      leftOperand: '',
+      rightOperand: '',
+      isHint: false,
+      sequence: 0
     }
   },
   computed: {
     isUserAnswer() {
-      console.log(this.userAnswer)
       if (this.userAnswer !== '') {
         return false;
       }
       return true;
-    },
+    }
   },
   methods: {
     goHome() {
       console.log("Go Home");
     },
-    initSubmit() {
-      this.isSubmitted = true;
+    onRefresh() {
+      this.isAnotherTry = false;
+      this.refresh();
+    },
+    getSequence(sequence: number) {
+      this.sequence = sequence;
     },
     refresh() {
-      this.isSubmitted = false;
+      this.isHint = false;
+      if (!this.isAnotherTry) {
+        this.leftOperand = '0';
+        this.rightOperand = '0';
+      }
+      if (this.practiceType === 'subtraction') {
+        this.subtractionKey = this.subtractionKey + 1;
+        this.additionKey = 0;
+      } else if (this.practiceType === 'addition') {
+        this.additionKey = this.additionKey + 1;
+        this.subtractionKey = 0;
+      }
+      this.isSubmitClicked = false;
+      this.answers = [];
+      this.userAnswer = '';
+      this.systemAnswer = '';
     },
-    getHint() {
-      console.log("Get Hint");
+    updateHintStatus(hintStatus: boolean) {
+      this.isHint = hintStatus;
     },
-    trackSequence(json: string) {
-      this.sequence = json;
+    sendHint() {
+      this.isHint = true;
+    },
+    createNewProblem() {
+      this.additionKey = this.additionKey + 1;
+      this.subtractionKey = 0;
+    },
+    getLeft(left: string) {
+      this.leftOperand = left;
+    },
+    getRight(right: string) {
+      this.rightOperand = right;
     },
     getUserAnswer(userAnswer: []) {
       this.userAnswer = '';
@@ -99,12 +154,14 @@ import SubmitComponent from './sub2/SubmitComponent.vue';
       this.answers[1] = this.systemAnswer;
     },
     onSubmitClicked() {
-      console.log("Clicked");
-      console.log(this.answers[0])
-      console.log(this.userAnswer);
+      this.isAnotherTry = false;
       if (this.answers[0] !== '') {
         this.isSubmitClicked = true;
       }
+    },
+    tryAgain() {
+      this.isAnotherTry = true;
+      this.refresh();
     }
   }
 })
