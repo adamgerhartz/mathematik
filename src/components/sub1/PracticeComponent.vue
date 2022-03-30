@@ -11,9 +11,8 @@
       :onSequence="sequence === -1"
     />
     <addition-component
+      ref="addComp"
       :key="additionKey"
-      :isHintTriggered="isHint"
-      @hint-update="updateHintStatus"
       v-if="practiceType === 'addition'"
       @user-answer="getUserAnswer"
       @system-answer="getSystemAnswer"
@@ -25,9 +24,8 @@
       :rightO="isAnotherTry ? rightOperand : '0'"
     />
     <subtraction-component
+      ref="subComp"
       :key="subtractionKey"
-      :isHintTriggered="isHint"
-      @hint-update="updateHintStatus"
       v-else
       @user-answer="getUserAnswer"
       @system-answer="getSystemAnswer"
@@ -116,11 +114,13 @@ import SubmitComponent from './sub2/SubmitComponent.vue';
       this.userAnswer = '';
       this.systemAnswer = '';
     },
-    updateHintStatus(hintStatus: boolean) {
-      this.isHint = hintStatus;
-    },
     sendHint() {
-      this.isHint = true;
+      if (this.practiceType === "subtraction") {
+        this.$refs.subComp.isHoverHint(this.sequence);
+        this.$refs.subComp.isHint = true;
+      }/* else if (this.practiceType === "addition") {
+        this.$refs.addComp.onHintTrigger(this.hint);      
+      }*/
     },
     createNewProblem() {
       this.additionKey = this.additionKey + 1;
@@ -154,6 +154,9 @@ import SubmitComponent from './sub2/SubmitComponent.vue';
       this.answers[1] = this.systemAnswer;
     },
     onSubmitClicked() {
+      if (this.practiceType === "subtraction") {
+        this.$refs.subComp.isHint = false;
+      }
       this.isAnotherTry = false;
       if (this.answers[0] !== '') {
         this.isSubmitClicked = true;

@@ -1,7 +1,7 @@
 <!-- TEMPLATE -->
 <template>
-  <div class="hint" v-if="isHint">
-    <p class="hint-text" :ref="hint-text"><b>👀 Hint: </b>{{ hint }}</p>
+  <div class="hint" v-if="isHint && shouldDisplayHintDiv">
+    <p class="hint-text" ref="hint-text"><b>👀 Hint: </b>{{ hint }}</p>
   </div>
   <div
     :style="{ 'grid-template-columns': columnLengthOperand, 'margin-left': dynamicCrunch }"
@@ -13,7 +13,7 @@
     </span>
     <span class="top-bumper-1" :style="{ 'grid-template-columns': answerLength }">
       <li @click="borrow(index, false)" v-for="(num, index) in topBumper1" :key="index" :ref="'borrow1' + index"
-        :class="{ 'clickable': isHover(index, false) }">
+        @mouseover="isHover(index, false)">
         {{ num }}
       </li>
     </span>
@@ -23,7 +23,7 @@
         v-for="(num, index) in strArrayLeft"
         :key="index"
         :ref="'lefto' + index"
-        :class="{ 'clickable': isHover(index, true) }">
+        @mouseover="isHover(index, true)">
         {{ num }}
       </li>
     </span>
@@ -114,20 +114,13 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       blurDetected: false,
       isHint: false,
       currentHoverEl: 'Current State',
-      counter: 1
+      shouldDisplayHintDiv: true,
+      isHintHighlight: false,
+      retainOverride: false
     }
   },
   created() {
     this.setup();
-  },
-  watch: {
-    isHintTriggered(value: any) {
-      if (value) {
-        this.isHint = true;
-      } else {
-        this.isHint = false;
-      }
-    }
   },
   computed: {
     hint() {
@@ -135,35 +128,47 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
         if (this.userAnswer[i] === '.') {
           continue;
         }
-        if (this.topBumper2[i] !== '' && this.topBumper2Visibility[i]) {
-          if (this.userAnswer[i] !== '' && this.userAnswer[i] !== this.systemAnswer[i]) {
+        if (this.currentHoverEl !== '' && this.currentHoverEl !== 'Current State') {
+            this.isHintHighlight = true;
+            this.shouldDisplayHintDiv = false;
+            break;
+        }
+        if (this.userAnswer[i] !== '' && this.userAnswer[i] !== this.systemAnswer[i]) {
+          if (this.topBumper2Visibility[i]) {
             return `${this.topBumper2[i]} - ${this.right[i]} does not equal ${this.userAnswer[i]}`;
-          } else if (this.userAnswer[i] === '') {
-            return `${this.topBumper2[i]} - ${this.right[i]}`;
-          }
-        } else if (this.topBumper2[i] !== '' && !this.topBumper2Visibility[i]) {
-          if (this.currentHoverEl !== '') {
-            const el = eval(`${this.currentHoverEl}`);
-            el.style.background = "green";
-          }
-          return "Highlight";
-        } else if (this.topBumper1[i] !== '' && this.topBumper1Visibility[i]) {
-          if (this.userAnswer[i] !== '' && this.userAnswer[i] !== this.systemAnswer[i]) {
+          } else if (this.topBumper2[i]) {
+            this.removeUserAnswerBefore(i);
+            this.moveSequenceOnEdit(i, "borrow-fail");
+            return `You need to auto borrow.`;
+          } else if (this.topBumper1Visibility[i]) {
             return `${this.topBumper1[i]} - ${this.right[i]} does not equal ${this.userAnswer[i]}`;
-          } else if (this.userAnswer[i] === '') {
-            return `${this.topBumper1[i]} - ${this.right[i]}`;
-          }
-        } else if (this.topBumper1[i] !== '' && !this.topBumper1Visibility[i]) {
-          // highlight hover
-          if (this.currentHoverEl !== '') {
-            const el = eval(`${this.currentHoverEl}`);
-            el.style.background = "green";
-          }
-          return "Highlight";
-        } else {
-          if (this.userAnswer[i] !== '' && this.userAnswer[i] !== this.systemAnswer[i]) {
+          } else if (this.topBumper1[i]) {
+            this.removeUserAnswerBefore(i);
+            this.moveSequenceOnEdit(i, "borrow-fail");
+            return `You need to auto borrow.`;
+          } else {
             return `${this.left[i]} - ${this.right[i]} does not equal ${this.userAnswer[i]}`;
-          } else if (this.userAnswer[i] === '') {
+          }
+        } else if (this.userAnswer[i] !== '') {
+          if (this.topBumper2Visibility[i]) {
+            // do nothing
+          } else if (this.topBumper2[i]) {
+            this.removeUserAnswerBefore(i);
+            this.moveSequenceOnEdit(i, "borrow-fail");
+            return `You need to auto borrow.`;
+          } else if (this.topBumper1Visibility[i]) {
+            // do nothing
+          } else if (this.topBumper1[i]) {
+            this.removeUserAnswerBefore(i);
+            this.moveSequenceOnEdit(i, "borrow-fail");
+            return `You need to auto borrow.`;
+          }
+        } else if (this.userAnswer[i] === '') {
+          if (this.topBumper2Visibility[i]) {
+            return `${this.topBumper2[i]} - ${this.right[i]}`;
+          } else if (this.topBumper1Visibility[i]) {
+            return `${this.topBumper1[i]} - ${this.right[i]}`;
+          } else {
             return `${this.left[i]} - ${this.right[i]}`;
           }
         }
@@ -215,6 +220,16 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
     this.moveSequence(true);
   },
   methods: {
+    removeUserAnswerBefore(index: number) {
+      for (let i = 0; i < index; i++) {
+        if (this.userAnswer[i] !== '.') {
+          const el = eval(`this.$refs.element${i}[0]`);
+          el.value = '';
+          this.userAnswer[i] = '';
+        }
+      }
+      this.retainOverride = true;
+    },
     setup() {
       if (this.leftO === "0" && this.rightO === "0") {
         this.numInitialLeft = generateRandomNumber();
@@ -237,10 +252,59 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       this.diffAnswerLengthAndOperandLength = this.systemAnswer.length - this.numColumnsInOperand;
     },
 
-    isHover(index: number, isLeftOperand: boolean) {
-      if (index > this.sequence) {
-        return;
+    isHoverHint(sequence: number) {
+      for (let i = this.userAnswer.length - 1; i >= sequence; i--) {
+        if (this.userAnswer[i] !== '' && this.userAnswer[i] !== this.systemAnswer[i]) {
+          return;
+        }
       }
+      
+      let offset = 1;
+      while ((this.left[sequence - offset] === '.' || this.left[sequence - offset] === '0') && !this.topBumper1Visibility[sequence - offset]) {
+        offset = offset + 1;
+      }
+
+      if (Number(this.left[this.sequence]) < Number(this.right[this.sequence]) && !this.topBumper1Visibility[this.sequence]) {
+        if (this.topBumper1[sequence - offset] && !this.topBumper1Visibility[sequence - offset]) {
+          this.currentHoverEl = eval(`this.$refs.lefto${sequence - offset}[0]`);
+          this.currentHoverEl.classList.add("highlight");
+          return;
+        } else if (this.topBumper2[sequence - offset] && !this.topBumper2Visibility[sequence - offset]) {
+          this.currentHoverEl = eval(`this.$refs.borrow1${sequence - offset}[0]`);
+          this.currentHoverEl.classList.add("highlight");
+          return;
+        } else if (this.topBumper1[sequence] && !this.topBumper1Visibility[sequence]) {
+          this.currentHoverEl = eval(`this.$refs.lefto${sequence - offset}[0]`);
+          this.currentHoverEl.classList.add("highlight");
+          return;
+        } else if (this.topBumper2[sequence] && !this.topBumper2Visibility[sequence]) {
+          this.currentHoverEl = eval(`this.$refs.borrow1${sequence - offset}[0]`);
+          this.currentHoverEl.classList.add("highlight");
+          return;
+        }
+      } else if (Number(this.topBumper1[this.sequence]) < Number(this.right[this.sequence]) && this.topBumper1Visibility[this.sequence]) {
+        if (this.topBumper1[sequence - offset] && !this.topBumper1Visibility[sequence - offset]) {
+          this.currentHoverEl = eval(`this.$refs.lefto${sequence - offset}[0]`);
+          this.currentHoverEl.classList.add("highlight");
+          return;
+        } else if (this.topBumper2[sequence - offset] && !this.topBumper2Visibility[sequence - offset]) {
+          this.currentHoverEl = eval(`this.$refs.borrow1${sequence - offset}[0]`);
+          this.currentHoverEl.classList.add("highlight");
+          return;
+        } else if (this.topBumper1[sequence] && !this.topBumper1Visibility[sequence]) {
+          this.currentHoverEl = eval(`this.$refs.lefto${sequence - offset}[0]`);
+          this.currentHoverEl.classList.add("highlight");
+          return;
+        } else if (this.topBumper2[sequence] && !this.topBumper2Visibility[sequence]) {
+          this.currentHoverEl = eval(`this.$refs.borrow1${sequence - offset}[0]`);
+          this.currentHoverEl.classList.add("highlight");
+          return;
+        }
+      }
+    },
+
+    isHover(index: number, isLeftOperand: boolean) {
+      let el = this.currentHoverEl;
       // initial state
       if (this.sequenceCopy === -1 && index !== this.left.length - 1) {
         return;
@@ -253,52 +317,39 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
         offset = offset + 1;
       }
 
-      if (index === this.sequence - offset) {
-        if (Number(this.left[this.sequence]) < Number(this.right[this.sequence]) && !this.topBumper1Visibility[this.sequence]) {
-          if (isLeftOperand) {
-            if (this.topBumper1[this.sequence - offset] && !this.topBumper1Visibility[this.sequence - offset]) {
-              this.currentHoverEl = `this.$refs.lefto${this.sequence - offset}[0]`;
-              return true;
-            } else if (this.topBumper1[this.sequence - offset] && this.topBumper1Visibility[this.sequence - offset]) {
-              this.currentHoverEl = '';
-              return false;
-            }
-          } else {
-            if (this.topBumper2[this.sequence - offset] && this.topBumper1Visibility[this.sequence - offset] && !this.topBumper2Visibility[this.sequence - offset]) {
-              this.currentHoverEl = `this.$refs.borrow1${this.sequence - offset}[0]`;
-              return true;
-            } else if (this.topBumper2[this.sequence - offset] && this.topBumper1Visibility[this.sequence - offset] && this.topBumper2Visibility[this.sequence - offset]) {
-              this.currentHoverEl = '';
-              return false;
-            }
-          }
-        } else if (Number(this.topBumper1[this.sequence]) < Number(this.right[this.sequence]) && this.topBumper1Visibility[this.sequence]) {
-          if (isLeftOperand) {
-            if (this.topBumper1[this.sequence - offset] && !this.topBumper1Visibility[this.sequence - offset]) {
-              this.currentHoverEl = `this.$refs.lefto${this.sequence - offset}[0]`;
-              return true;
-            } else if (this.topBumper1[this.sequence - offset] && this.topBumper1Visibility[this.sequence - offset]) {
-              this.currentHoverEl = '';
-              return false;
-            }
-          } else {
-            if (this.topBumper2[this.sequence - offset] && this.topBumper1Visibility[this.sequence - offset] && !this.topBumper2Visibility[this.sequence - offset]) {
-              this.currentHoverEl = `this.$refs.borrow1${this.sequence - offset}[0]`;
-              return true;
-            } else if (this.topBumper2[this.sequence - offset] && this.topBumper1Visibility[this.sequence - offset] && this.topBumper2Visibility[this.sequence - offset]) {
-              this.currentHoverEl = '';
-              return false;
-            }
+      if (Number(this.left[this.sequence]) < Number(this.right[this.sequence]) && !this.topBumper1Visibility[this.sequence]) {
+        if (isLeftOperand) {
+          if (this.topBumper1[this.sequence - offset] && !this.topBumper1Visibility[this.sequence - offset]) {
+            el = eval(`this.$refs.lefto${this.sequence - offset}[0]`);
+            el.classList.add("clickable");
+            return;
           }
         } else {
-          this.currentHoverEl = '';
-          return false;
+          if (this.topBumper2[this.sequence - offset] && this.topBumper1Visibility[this.sequence - offset] && !this.topBumper2Visibility[this.sequence - offset]) {
+            el = eval(`this.$refs.borrow1${this.sequence - offset}[0]`);
+            el.classList.add("clickable");
+            return;
+          }
+        }
+      } else if (Number(this.topBumper1[this.sequence]) < Number(this.right[this.sequence]) && this.topBumper1Visibility[this.sequence]) {
+        if (isLeftOperand) {
+          if (this.topBumper1[this.sequence - offset] && !this.topBumper1Visibility[this.sequence - offset]) {
+            el = eval(`this.$refs.lefto${this.sequence - offset}[0]`);
+            el.classList.add("clickable");
+            return;
+          }
+        } else {
+          if (this.topBumper2[this.sequence - offset] && this.topBumper1Visibility[this.sequence - offset] && !this.topBumper2Visibility[this.sequence - offset]) {
+            el = eval(`this.$refs.borrow1${this.sequence - offset}[0]`);
+            el.classList.add("clickable");
+            return;
+          }
         }
       }
     },
 
     borrow(index: number, isLeftOperand: boolean) {
-      console.log(`count == ${this.counter}`);
+      this.shouldDisplayHintDiv = true;
       this.borrowClicked = false;
       let offset = 1;
       while ((this.left[this.sequenceCopy - offset] === '.' || this.left[this.sequenceCopy - offset] === '0') && !this.topBumper1Visibility[this.sequenceCopy - offset]) {
@@ -311,6 +362,8 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
               this.borrowClicked = true;
               let el = eval(`this.$refs.lefto${index}[0]`);
               el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+              el.classList.remove("clickable");
+              el.classList.remove("highlight");
               el.style.padding = "0 0.15em";
               el = eval(`this.$refs.borrow1${index}[0]`);
               el.style.visibility = 'visible';
@@ -319,6 +372,8 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
                 this.borrowClicked = true;
                 let el = eval(`this.$refs.lefto${index + 2}[0]`);
                 el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+                el.classList.remove("clickable");
+                el.classList.remove("highlight");
                 el.style.padding = "0 0.15em";
                 el = eval(`this.$refs.borrow1${index + 2}[0]`);
                 el.style.visibility = 'visible';
@@ -327,34 +382,51 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
                 this.borrowClicked = true;
                 let el = eval(`this.$refs.lefto${index + 1}[0]`);
                 el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+                el.classList.remove("clickable");
+                el.classList.remove("highlight");
                 el.style.padding = "0 0.15em";
                 el = eval(`this.$refs.borrow1${index + 1}[0]`);
                 el.style.visibility = 'visible';
                 this.topBumper1Visibility[index + 1] = true;
               }
             }
-            this.isHint = false;
           } else {
             if (Number(this.topBumper1[this.sequenceCopy]) < Number(this.right[this.sequenceCopy])) {
               this.borrowClicked = true;
               let el = eval(`this.$refs.lefto${index}[0]`);
               el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+              el.classList.remove("clickable");
+              el.classList.remove("highlight");
               el.style.padding = "0 0.15em";
               el = eval(`this.$refs.borrow1${index}[0]`);
               el.style.visibility = 'visible';
               this.topBumper1Visibility[index] = true;
-              if (this.left[index + 1] === ".") {
+              if (this.left[index + 1] === "." && this.topBumper1Visibility[index + 2]) {
                 this.borrowClicked = true;
                 let el = eval(`this.$refs.borrow1${index + 2}[0]`);
                 el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+                el.classList.remove("clickable");
+                el.classList.remove("highlight");
                 el.style.padding = "0 0.15em";
                 el = eval(`this.$refs.borrow2undefined[${index + 2}]`);
                 el.style.visibility = 'visible';
                 this.topBumper2Visibility[index + 2] = true;
+              } else if (this.left[index + 1] === "." && !this.topBumper1Visibility[index + 2]) {
+                this.borrowClicked = true;
+                let el = eval(`this.$refs.lefto${index + 2}[0]`);
+                el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+                el.classList.remove("clickable");
+                el.classList.remove("highlight");
+                el.style.padding = "0 0.15em";
+                el = eval(`this.$refs.borrow1${index + 2}[0]`);
+                el.style.visibility = 'visible';
+                this.topBumper1Visibility[index + 2] = true;
               } else if (this.left[index + 1] === "0") {
                 this.borrowClicked = true;
                 let el = eval(`this.$refs.lefto${index + 1}[0]`);
                 el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+                el.classList.remove("clickable");
+                el.classList.remove("highlight");
                 el.style.padding = "0 0.15em";
                 el = eval(`this.$refs.borrow1${index + 1}[0]`);
                 el.style.visibility = 'visible';
@@ -363,19 +435,22 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
                 this.borrowClicked = true;
                 let el = eval(`this.$refs.borrow1${index + 1}[0]`);
                 el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+                el.classList.remove("clickable");
+                el.classList.remove("highlight");
                 el.style.padding = "0 0.15em";
                 el = eval(`this.$refs.borrow2undefined[${index + 1}]`);
                 el.style.visibility = 'visible';
                 this.topBumper2Visibility[index + 1] = true;
               }
             }
-            this.isHint = false;
           }
         } else if (this.topBumper2[index] && !isLeftOperand && this.topBumper1Visibility[index]) {
           if (!this.topBumper1Visibility[this.sequence]) {
             if (Number(this.left[this.sequenceCopy]) < Number(this.right[this.sequenceCopy])) {
               let el = eval(`this.$refs.borrow1${index}[0]`);
               el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+              el.classList.remove("clickable");
+              el.classList.remove("highlight");
               if (el.innerHTML.length === 1) {
                 el.style.padding = "0 0.30em";
               }
@@ -385,6 +460,8 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
               if (this.left[index + 1] === "." && this.topBumper1Visibility[this.sequenceCopy]) {
                 let el = eval(`this.$refs.borrow1${index + 2}[0]`);
                 el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+                el.classList.remove("clickable");
+                el.classList.remove("highlight");
                 if (el.innerHTML.length === 1) {
                   el.style.padding = "0 0.30em";
                 }
@@ -394,6 +471,8 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
               } else if (this.left[index + 1] === "." && !this.topBumper1Visibility[this.sequenceCopy]) {
                 let el = eval(`this.$refs.lefto${index + 2}[0]`);
                 el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+                el.classList.remove("clickable");
+                el.classList.remove("highlight");
                 el.style.padding = "0 0.15em";
                 el = eval(`this.$refs.borrow1${index + 2}[0]`);
                 el.style.visibility = 'visible';
@@ -402,6 +481,8 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
                 if (!this.topBumper1Visibility[index + 1]) {
                   let el = eval(`this.$refs.lefto${index + 1}[0]`);
                   el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+                  el.classList.remove("clickable");
+                  el.classList.remove("highlight");
                   el.style.padding = "0 0.15em";
                   el = eval(`this.$refs.borrow1${index + 1}[0]`);
                   el.style.visibility = 'visible';
@@ -409,6 +490,8 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
                 } else {
                   let el = eval(`this.$refs.borrow1${index + 1}[0]`);
                   el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+                  el.classList.remove("clickable");
+                  el.classList.remove("highlight");
                   if (el.innnerHTML.length === 1) {
                     el.style.padding = "0 0.30em";
                   }
@@ -419,17 +502,20 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
               } else if (index + 1 === this.sequenceCopy) {
                 let el = eval(`this.$refs.lefto${index + 1}[0]`);
                 el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+                el.classList.remove("clickable");
+                el.classList.remove("highlight");
                 el.style.padding = "0 0.15em";
                 el = eval(`this.$refs.borrow1${index + 1}[0]`);
                 el.style.visibility = 'visible';
                 this.topBumper1Visibility[index + 1] = true;
               }
             }
-            this.isHint = false;
           } else {
             if (Number(this.topBumper1[this.sequenceCopy]) < Number(this.right[this.sequenceCopy])) {
               let el = eval(`this.$refs.borrow1${index}[0]`);
               el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+              el.classList.remove("clickable");
+              el.classList.remove("highlight");
               if (el.innerHTML.length === 1) {
                 el.style.padding = "0 0.30em";
               }
@@ -439,6 +525,8 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
               if (this.topBumper1Visibility[index + 1]) {
                 let el = eval(`this.$refs.borrow1${index + 1}[0]`);
                 el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+                el.classList.remove("clickable");
+                el.classList.remove("highlight");
                 if (el.innerHTML.length === 1) {
                   el.style.padding = "0 0.30em";
                 }
@@ -449,6 +537,8 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
                 if (this.topBumper1Visibility[index + 2]) {
                   let el = eval(`this.$refs.borrow1${index + 2}[0]`);
                   el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
+                  el.classList.remove("clickable");
+                  el.classList.remove("highlight");
                   if (el.innerHTML.length === 1) {
                     el.style.padding = "0 0.30em";
                   }
@@ -459,6 +549,8 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
                   let el = eval(`this.$refs.lefto${index + 2}[0]`);
                   el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
                   el.style.padding = "0 0.15em";
+                  el.classList.remove("clickable");
+                  el.classList.remove("highlight");
                   el = eval(`this.$refs.borrow1${index + 2}[0]`);
                   el.style.visibility = 'visible';
                   this.topBumper1Visibility[index + 2] = true;
@@ -467,19 +559,30 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
                 let el = eval(`this.$refs.lefto${index + 1}[0]`);
                 el.style.background = "linear-gradient(to right top, transparent 47.75%, currentColor 49.5%, currentColor 50.5%, transparent 52.25%)";
                 el.style.padding = "0 0.15em";
+                el.classList.remove("clickable");
+                el.classList.remove("highlight");
                 el = eval(`this.$refs.borrow1${index + 1}[0]`);
                 el.style.visibility = 'visible';
                 this.topBumper1Visibility[index + 1] = true;
               }
             }
-            this.isHint = false;
           }
         }
       }
+      this.isHint = false;
+      this.currentHoverEl = '';
+      this.isHover(this.sequence);
     },
 
     retainValue(event: any, index: number) {
+      if (this.retainOverride) {
+        const el = eval(`this.$refs.element${this.sequence}[0]`);
+        el.value = ''; 
+        this.userAnswer[this.sequence] = '';
+        this.moveSequence(true, "borrow-fail");
+      }
       if (this.sequence === index) {
+        this.retainOverride = false;
         const el = eval(`this.$refs.element${this.sequence}[0]`);
         el.value = this.retainedValue;
         el.disabled = true;
@@ -505,7 +608,14 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       return false;
     },
 
-    moveSequence(isOverride: boolean) {
+    moveSequence(isOverride: boolean, error: string) {
+      if (this.currentHoverEl !== '' && this.currentHoverEl !== 'Current State') {
+        const el = eval(this.currentHoverEl);
+        el.classList.remove("highlight");
+        el.classList.remove("clickable");
+      }
+      this.currentHoverEl = '';
+      this.shouldDisplayHintDiv = true;
       this.sequenceCopy = this.sequence;
       let index = this.userAnswer.length - 1;
       if (this.onEdit) {
@@ -535,10 +645,16 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
         }
       }
       this.$emit("sequence", this.sequence);
+      if (error !== "borrow-fail") {
+        this.isHint = false;
+      }
     },
 
-    moveSequenceOnEdit(index: number) {
-      this.isHint = false;
+    moveSequenceOnEdit(index: number, error: string) {
+      console.log(error);
+      if (error !== "borrow-fail") {
+        this.isHint = false;
+      }
       this.onEdit = true;
       if (this.userAnswer[index] !== '.') {
         const inputCopy = this.userAnswer[index]
@@ -548,7 +664,7 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
           return;
         }
         this.sequence = index;
-        this.moveSequence(false);
+        this.moveSequence(false, error);
       }
     },
 
@@ -631,6 +747,7 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
     },
 
     isNumber(event: any, index: number) {
+      this.isHintHighlight = false;
       this.isHint = false;
       if (event.key === 'Enter' && index === 0) {
         this.userAnswer[index] = '';
@@ -689,7 +806,6 @@ export default class SubtractionComponent extends Vue {
   isTryAgain!: boolean
   leftO!: string
   rightO!: string
-  isHintTriggered!: boolean
 }
 </script>
 
@@ -750,6 +866,11 @@ export default class SubtractionComponent extends Vue {
     cursor: pointer;
     background-color: gainsboro;
   }
+}
+
+.left-operand li.highlight,
+.top-bumper-1 li.highlight {
+  background: gainsboro;
 }
 
 .answer li .clickable {
