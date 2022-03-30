@@ -63,9 +63,6 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
         return right;
       }
     }),
-    'hint-update': ((hintValue: boolean) => {
-      return hintValue;
-    }),
     'rare-new-problem': (() => {
       return true;
     }),
@@ -74,7 +71,6 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
     })
   },
   props: {
-    isHintTriggered: Boolean,
     leftO: String,
     rightO: String
   },
@@ -169,13 +165,6 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       }
       return `repeat(${this.answer.length}, 1fr)`;
     },
-  },
-  watch: {
-    isHintTriggered(value: any) {
-      if (value) {
-        this.isHint = true;
-      }
-    }
   },
   methods: {
 
@@ -296,11 +285,11 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
         }
       }
       this.$emit("sequence", this.sequence);
+      this.isHint = false;
     },
 
     moveSequenceOnEdit(index: number) {
       this.isHint = false;
-      this.$emit("hint-update", false);
       this.onEdit = true;
       if (this.userInput[index] !== '.') {
         this.userInput[index] = '';
@@ -371,7 +360,6 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
 
     isNumber(event: any, index: number) {
       this.isHint = false;
-      this.$emit("hint-update", false);
       if ( event.key === '0' ||
            event.key === '1' ||
            event.key === '2' ||
@@ -422,7 +410,6 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
 export default class AdditionComponent extends Vue {
   leftO!: string
   rightO!: string
-  isHintTriggered!: boolean
 }
 </script>
 

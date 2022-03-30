@@ -118,9 +118,9 @@ import SubmitComponent from './sub2/SubmitComponent.vue';
       if (this.practiceType === "subtraction") {
         this.$refs.subComp.isHoverHint(this.sequence);
         this.$refs.subComp.isHint = true;
-      }/* else if (this.practiceType === "addition") {
-        this.$refs.addComp.onHintTrigger(this.hint);      
-      }*/
+      } else if (this.practiceType === "addition") {
+        this.$refs.addComp.isHint = true;
+      }
     },
     createNewProblem() {
       this.additionKey = this.additionKey + 1;
