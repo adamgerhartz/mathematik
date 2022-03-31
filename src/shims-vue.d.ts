@@ -5,4 +5,4 @@ declare module '*.vue' {
   export default component
 }
 
-declare module 'click-outside-vue3'
+declare module 'vue-ls'

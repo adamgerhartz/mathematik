@@ -180,6 +180,12 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
         this.numInitialLeft = generateRandomNumber();
         this.numInitialRight = generateRandomNumber();
       }
+      if (this.$ls.get('left')) {
+        this.numInitialLeft = this.$ls.get('left');
+        this.numInitialRight = this.$ls.get('right');
+      }
+      this.$ls.set('left', this.numInitialLeft);
+      this.$ls.set('right', this.numInitialRight);
       this.numDecimalFractions = Math.max(precision(this.numInitialLeft), precision(this.numInitialRight));
       this.strGroomedLeft = this.numInitialLeft.toFixed(this.numDecimalFractions);
       this.strGroomedRight = this.numInitialRight.toFixed(this.numDecimalFractions);
@@ -350,6 +356,8 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
 
       // edge case: remove additional carry-over
       if (this.topBumper[0] && this.topBumper.length > this.left.length && this.topBumper.length > this.right.length) {
+        this.$ls.remove("left");
+        this.$ls.remove("right");
         this.$emit("rare-new-problem");
         return;
       }

@@ -22,25 +22,17 @@ import MainMenuComponent from './sub1/MainMenuComponent.vue';
 import PracticeComponent from './sub1/PracticeComponent.vue';
 
 @Options({
+  props: {
+    practiceType: String
+  },
   components: {
     MainMenuComponent,
     PracticeComponent
   },
-  data() {
-    return {
-      practiceType: 'N/A'
-    }
-  },
-  methods: {
-    initPractice(practiceType: string) {
-      this.practiceType = practiceType;
-    },
-    goHome() {
-      this.practiceType = 'N/A';
-    }
-  }
 })
-export default class MainWidget extends Vue {}
+export default class MainWidget extends Vue {
+  practiceType!: string
+}
 </script>
 
 <!-- STYLE -->

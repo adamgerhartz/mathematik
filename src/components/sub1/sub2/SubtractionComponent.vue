@@ -241,6 +241,12 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       while (this.numInitialLeft < this.numInitialRight) {
         this.numInitialLeft = generateRandomNumber();
       }
+      if (this.$ls.get('left')) {
+        this.numInitialLeft = this.$ls.get('left');
+        this.numInitialRight = this.$ls.get('right');
+      }
+      this.$ls.set('left', this.numInitialLeft);
+      this.$ls.set('right', this.numInitialRight);
       this.numDecimalFractions = Math.max(precision(this.numInitialLeft), precision(this.numInitialRight));
       this.strGroomedLeft = this.numInitialLeft.toFixed(this.numDecimalFractions);
       this.strGroomedRight = this.numInitialRight.toFixed(this.numDecimalFractions);
@@ -617,6 +623,7 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       this.currentHoverEl = '';
       this.shouldDisplayHintDiv = true;
       this.sequenceCopy = this.sequence;
+      this.borrow(this.sequenceCopy);
       let index = this.userAnswer.length - 1;
       if (this.onEdit) {
         index = this.sequence;

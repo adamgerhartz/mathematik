@@ -1,7 +1,7 @@
 <!-- TEMPLATE -->
 <template>
   <div class="nav">
-    <button type="button" @click="goHome">Home</button>
+    <router-link class="home" @click="home" to="/">Home</router-link>
     <button type="button" @click="refresh">New Problem</button>
     <button type="button" :disabled="onSequence" @click="sendHint">Hint</button>
     <button type="button" :disabled="isAnswer" @click="triggerSubmissionComponent">Submit</button>
@@ -20,13 +20,16 @@ import { Options, Vue } from 'vue-class-component';
     'on-hint-triggered'
   ],
   methods: {
-    goHome() {
-      this.$emit('go-home');
+    home() {
+      this.$ls.remove("left");
+      this.$ls.remove("right");
     },
     triggerSubmissionComponent() {
       this.$emit('submit-clicked');
     },
     refresh() {
+      this.$ls.remove("left");
+      this.$ls.remove("right");
       this.$emit('refresh');
     },
     sendHint() {
@@ -54,7 +57,8 @@ export default class NavMenuComponent extends Vue {
   grid-template-rows: repeat(4, 1fr);
 }
 
-button {
+button,
+a {
   width: 150px;
   margin: auto auto auto 20px;
   height: 40px;
@@ -62,7 +66,8 @@ button {
 
 /* Media Queries */
 @media screen and (max-width: 680px) {
-  button {
+  button,
+  a {
     width: 130px;
     height: 34.67px;
   }

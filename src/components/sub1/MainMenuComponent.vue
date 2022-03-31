@@ -1,9 +1,9 @@
 <!-- TEMPLATE -->
 <template>
-  <button class="add-btn" type="button" @click="initiateAddition">Addition</button>
-  <button class="sub-btn" type="button" @click="initiateSubtraction">Subtraction</button>
-  <button class=" mult-btn tooltip" type="button" disabled>Multiplication</button>
-  <button class="div-btn tooltip" type="button" disabled>Division</button>
+  <router-link to="/addition" class="add-btn">Addition</router-link>
+  <router-link to="/subtraction" class="sub-btn">Subtraction</router-link>
+  <button class=" mult-btn tooltip" disabled>Multiplication</button>
+  <button class="div-btn tooltip" disabled>Division</button>
   <span class="tooltiptext">{{ tooltipText }}</span>
 </template>
 
@@ -32,6 +32,10 @@ import { Options, Vue } from 'vue-class-component';
     initiateSubtraction() {
       this.$emit('init-practice', 'subtraction');
     }
+  },
+  created() {
+    this.$ls.remove("left");
+    this.$ls.remove("right");
   }
 })
 export default class MainMenu extends Vue {
@@ -45,19 +49,47 @@ export default class MainMenu extends Vue {
 $container-width: 950px;
 
 /* Main SCSS */
-button:hover {
+button:hover,
+a:hover {
   cursor: pointer;
 }
 
 .add-btn {
+  appearance: auto;
+  writing-mode: horizontal-tb !important;
+  text-rendering: auto;
+  color: -internal-light-dark(black, white);
+  letter-spacing: normal;
+  word-spacing: normal;
+  line-height: normal;
+  text-transform: none;
+  text-indent: 0px;
+  text-shadow: none;
+  display: inline-block;
+  text-align: center;
+  align-items: flex-start;
+  cursor: default;
+  box-sizing: border-box;
+  background-color: -internal-light-dark(rgb(239, 239, 239), rgb(59, 59, 59));
+  margin: 0em;
+  padding: 1px 6px;
+  border-width: 2px;
+  border-style: outset;
+  border-color: -internal-light-dark(rgb(118, 118, 118), rgb(133, 133, 133));
+  border-image: initial;
+  background: #EFEFEF;
   grid-column: 3/5;
   grid-row: 4/5;
   margin-right: -110%;
   margin-left: 5%;
   margin-top: -0.8em;
+  border-radius: 2px;
 }
 
 .sub-btn {
+  background: #EFEFEF;
+  border-radius: 2px;
+  outline: 1px solid #767676;
   grid-column: 4/6;
   grid-row: 3/4;
   margin-right: -75%;
