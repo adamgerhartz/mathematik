@@ -43,6 +43,7 @@ $dynamic-width: 96%;
 
 /* Main SCSS */
 .main-widget {
+  padding: 0.5em;
   display: grid;
   margin: auto;
   grid-template-columns: repeat(7, 1fr);
