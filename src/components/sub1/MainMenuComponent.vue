@@ -131,13 +131,13 @@ a:hover {
 /* Media Queries */
 @media screen and (max-width: 880px) {
   .tooltip ~ .tooltiptext {
-    font-size: 1vh;
+    grid-column: 6/8;
   }
 }
 
 @media screen and (max-width: 680px) {
   .tooltip ~ .tooltiptext {
-    grid-column: 8/10;
+    grid-column: 7/10;
   }
 
   .div-btn {
