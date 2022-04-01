@@ -55,18 +55,12 @@ $color-3: #A5CC6B; /* Pistachio */
 $color-4: #806D40; /* Gold Fusion */
 $color-5: #382633; /* Deep Purple */
 
-a:hover,
-#submit:hover,
-#hint:hover {
-  cursor: pointer;
-  background: $color-1;
-  color: $color-5;
-  letter-spacing: 7px;
-}
-
 a,
 #submit,
 #hint {
+  width: 200px;
+  margin: auto auto auto 20px;
+  height: 40px;
   text-align: center;
   background: $color-3;
   border-radius: 2px;
@@ -75,8 +69,15 @@ a,
   color: white;
   padding: 0.5em;
   letter-spacing: 5px;
-  transition: color 500ms, background-color 500ms, letter-spacing 500ms;
   font-weight: bold;
+}
+
+a:hover,
+#submit:hover,
+#hint:hover {
+  cursor: pointer;
+  background: $color-1;
+  color: $color-5;
 }
 
 .nav {
@@ -85,14 +86,6 @@ a,
   display: grid;
   grid-template-columns: auto;
   grid-template-rows: repeat(4, 1fr);
-}
-
-a,
-#submit,
-#hint {
-  width: 200px;
-  margin: auto auto auto 20px;
-  height: 40px;
 }
 
 #submit,
@@ -111,7 +104,6 @@ a,
 
 /* Media Queries */
 @media screen and (max-width: 680px) {
-  a,
   a {
     width: 130px;
     height: 34.67px;
