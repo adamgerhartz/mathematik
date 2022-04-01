@@ -1,7 +1,7 @@
 <!-- TEMPLATE -->
 <template>
   <div class="hint" v-if="isHint">
-    <p class="hint-text" :ref="hint-text"><b>👀 Hint: </b>{{ hint }}</p>
+    <p class="hint-text" ref="hint-text"><b>👀 Hint: </b>{{ hint }}</p>
   </div>
   <div
     :style="{ 'grid-template-columns': columnLengthOperand, 'margin-left': dynamicCrunch }"
@@ -105,6 +105,7 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
   },
   computed: {
     hint() {
+      console.log("Called");
       for (let i = this.userInput.length - 1; i >= this.sequence; i--) {
         if (this.userInput[i] === '.') {
           continue;

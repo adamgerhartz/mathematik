@@ -156,6 +156,8 @@ import SubmitComponent from './sub2/SubmitComponent.vue';
     onSubmitClicked() {
       if (this.practiceType === "subtraction") {
         this.$refs.subComp.isHint = false;
+      } else if (this.practiceType === "addition") {
+        this.$refs.addComp.isHint = false;
       }
       this.isAnotherTry = false;
       if (this.answers[0] !== '') {
