@@ -1,18 +1,16 @@
 <template>
   <div class="page">
-    <main-widget-component />
+    <router-view></router-view>
     <footer-component year="2022" />
   </div>
 </template>
 
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
-import MainWidgetComponent from './components/MainWidgetComponent.vue';
 import FooterComponent from './components/FooterComponent.vue';
 
 @Options({
   components: {
-    MainWidgetComponent,
     FooterComponent
   }
 })

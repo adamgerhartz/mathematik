@@ -1,9 +1,9 @@
 <!-- TEMPLATE -->
 <template>
-  <button class="add-btn" type="button" @click="initiateAddition">Addition</button>
-  <button class="sub-btn" type="button" @click="initiateSubtraction">Subtraction</button>
-  <button class=" mult-btn tooltip" type="button" disabled>Multiplication</button>
-  <button class="div-btn tooltip" type="button" disabled>Division</button>
+  <router-link to="/addition" class="add-btn">Addition</router-link>
+  <router-link to="/subtraction" class="sub-btn">Subtraction</router-link>
+  <a class=" mult-btn tooltip" disabled>Multiplication</a>
+  <a class="div-btn tooltip" disabled>Division</a>
   <span class="tooltiptext">{{ tooltipText }}</span>
 </template>
 
@@ -32,6 +32,10 @@ import { Options, Vue } from 'vue-class-component';
     initiateSubtraction() {
       this.$emit('init-practice', 'subtraction');
     }
+  },
+  created() {
+    this.$ls.remove("left");
+    this.$ls.remove("right");
   }
 })
 export default class MainMenu extends Vue {
@@ -44,52 +48,78 @@ export default class MainMenu extends Vue {
 /* SASS variables */
 $container-width: 950px;
 
+$color-1: #92BDA3; /* Cambridge Blue */
+$color-2: #A1BA89; /* Olivine */
+$color-3: #A5CC6B; /* Pistachio */
+$color-4: #806D40; /* Gold Fusion */
+$color-5: #382633; /* Deep Purple */
+
 /* Main SCSS */
-button:hover {
+button:hover,
+a:hover {
   cursor: pointer;
 }
 
+.add-btn,
+.sub-btn,
+.mult-btn,
+.div-btn {
+  text-align: center;
+  background: $color-3;
+  border-radius: 2px;
+  outline: 3px solid $color-4;
+  text-decoration: none;
+  color: white;
+  padding: 0.5em;
+  letter-spacing: 5px;
+  transition: color 500ms, background-color 500ms, letter-spacing 500ms;
+  font-weight: bold;
+}
+
 .add-btn {
-  grid-column: 3/5;
-  grid-row: 4/5;
-  margin-right: -110%;
-  margin-left: 5%;
-  margin-top: -0.8em;
+  grid-column: 3/8;
+  grid-row: 5/6;
 }
 
 .sub-btn {
-  grid-column: 4/6;
+  grid-column: 4/8;
+  grid-row: 4/5;
+}
+
+.add-btn:hover,
+.sub-btn:hover {
+  background: $color-1;
+  color: $color-5;
+  letter-spacing: 7px;
+}
+
+.mult-btn {
+  grid-column: 5/8;
   grid-row: 3/4;
-  margin-right: -75%;
-  margin-left: 12%;
-  margin-top: -0.8em;
+  opacity: 0.5;
 }
 
 .div-btn {
   grid-column: 6/8;
-  grid-row: 1/2;
+  grid-row: 2/3;
+  opacity: 0.5;
 }
 
-.mult-btn {
-  grid-column: 5/7;
-  grid-row: 2/3;
-  margin-right: -40%;
-  margin-left: 15%;
-  margin-top: -0.8em;
+.mult-btn:hover,
+.div-btn:hover {
+  cursor: default;
 }
 
 /* Credit for this tooltip: https://www.w3schools.com/css/css_tooltip.asp */
 .tooltip ~ .tooltiptext {
   opacity: 0;
-  width: 250px;
-  left: 50%;
-  margin-top: -75px;
+  grid-column: 7/8;
+  grid-row: 1/2;
   background-color: black;
   color: #fff;
   text-align: center;
   padding: 5px 0;
-  border-radius: 6px;
-  position: absolute;
+  border-radius: 4px;
   z-index: 1;
   transition: opacity 500ms;
 }
@@ -99,21 +129,31 @@ button:hover {
 }
 
 /* Media Queries */
+@media screen and (max-width: 880px) {
+  .tooltip ~ .tooltiptext {
+    grid-column: 6/8;
+  }
+}
+
 @media screen and (max-width: 680px) {
+  .tooltip ~ .tooltiptext {
+    grid-column: 7/10;
+  }
+
   .div-btn {
-    grid-column: 8/10;
+    grid-column: 7/10;
   }
 
   .mult-btn {
-    grid-column: 7/9;
+    grid-column: 6/10;
   }
 
   .sub-btn {
-    grid-column: 6/8;
+    grid-column: 5/10;
   }
 
   .add-btn {
-    grid-column: 5/7;
+    grid-column: 4/10;
   }
 }
 </style>

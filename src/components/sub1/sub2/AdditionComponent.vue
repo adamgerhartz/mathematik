@@ -63,9 +63,6 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
         return right;
       }
     }),
-    'hint-update': ((hintValue: boolean) => {
-      return hintValue;
-    }),
     'rare-new-problem': (() => {
       return true;
     }),
@@ -74,7 +71,6 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
     })
   },
   props: {
-    isHintTriggered: Boolean,
     leftO: String,
     rightO: String
   },
@@ -170,13 +166,6 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
       return `repeat(${this.answer.length}, 1fr)`;
     },
   },
-  watch: {
-    isHintTriggered(value: any) {
-      if (value) {
-        this.isHint = true;
-      }
-    }
-  },
   methods: {
 
     setup() {
@@ -191,6 +180,12 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
         this.numInitialLeft = generateRandomNumber();
         this.numInitialRight = generateRandomNumber();
       }
+      if (this.$ls.get('left')) {
+        this.numInitialLeft = this.$ls.get('left');
+        this.numInitialRight = this.$ls.get('right');
+      }
+      this.$ls.set('left', this.numInitialLeft);
+      this.$ls.set('right', this.numInitialRight);
       this.numDecimalFractions = Math.max(precision(this.numInitialLeft), precision(this.numInitialRight));
       this.strGroomedLeft = this.numInitialLeft.toFixed(this.numDecimalFractions);
       this.strGroomedRight = this.numInitialRight.toFixed(this.numDecimalFractions);
@@ -296,11 +291,11 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
         }
       }
       this.$emit("sequence", this.sequence);
+      this.isHint = false;
     },
 
     moveSequenceOnEdit(index: number) {
       this.isHint = false;
-      this.$emit("hint-update", false);
       this.onEdit = true;
       if (this.userInput[index] !== '.') {
         this.userInput[index] = '';
@@ -361,6 +356,8 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
 
       // edge case: remove additional carry-over
       if (this.topBumper[0] && this.topBumper.length > this.left.length && this.topBumper.length > this.right.length) {
+        this.$ls.remove("left");
+        this.$ls.remove("right");
         this.$emit("rare-new-problem");
         return;
       }
@@ -371,7 +368,6 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
 
     isNumber(event: any, index: number) {
       this.isHint = false;
-      this.$emit("hint-update", false);
       if ( event.key === '0' ||
            event.key === '1' ||
            event.key === '2' ||
@@ -422,7 +418,6 @@ import { greatestNumColumn } from '../../../utils/CompareColumnLength';
 export default class AdditionComponent extends Vue {
   leftO!: string
   rightO!: string
-  isHintTriggered!: boolean
 }
 </script>
 
